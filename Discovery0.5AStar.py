@@ -1,7 +1,7 @@
 import hlt
 import logging
 
-game = hlt.Game("Discovery 0.4")
+game = hlt.Game("Discovery 0.5A*")
 logging.info("Starting my Discovery!")
 
 while True:

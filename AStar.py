@@ -1,5 +1,55 @@
-from asyncio.log import logger
 import numpy as np
+from queue import PriorityQueue
+import heapq
+
+def heuristic(a, b):
+    (x1, y1) = a
+    (x2, y2) = b
+    return abs(x1 - x2) + abs(y1 - y2)
+
+# https://www.analytics-link.com/post/2018/09/14/applying-the-a-path-finding-algorithm-in-python-part-1-2d-square-grid 
+def astar(np_grid, start, goal):
+    # allow ship to move diagonally
+    neighbors = [(0,1),(0,-1),(1,0),(-1,0),(1,1),(1,-1),(-1,1),(-1,-1)]
+
+    # setup the search
+    close_set = set()
+    came_from = {}
+    gscore = {start:0}
+    fscore = {start:heuristic(start, goal)}
+
+    oheap = []
+    heapq.heappush(oheap, (fscore[start], start))
+    while oheap:
+        current = heapq.heappop(oheap)[1]
+        if current == goal:
+            data = []
+            while current in came_from:
+                data.append(current)
+                current = came_from[current]
+            return data
+        close_set.add(current)
+        for i, j in neighbors:
+            neighbor = current[0] + i, current[1] + j            
+            tentative_g_score = gscore[current] + heuristic(current, neighbor)
+            if 0 <= neighbor[0] < np_grid.shape[0]:
+                if 0 <= neighbor[1] < np_grid.shape[1]:                
+                    if np_grid[neighbor[0]][neighbor[1]] == 1:
+                        continue
+                else:
+                    # array bound y walls
+                    continue
+            else:
+                # array bound x walls
+                continue
+            if neighbor in close_set and tentative_g_score >= gscore.get(neighbor, 0):
+                continue
+            if  tentative_g_score < gscore.get(neighbor, 0) or neighbor not in [i[1]for i in oheap]:
+                came_from[neighbor] = current
+                gscore[neighbor] = tentative_g_score
+                fscore[neighbor] = tentative_g_score + heuristic(neighbor, goal)
+                heapq.heappush(oheap, (fscore[neighbor], neighbor))
+
 
 def navigate_astar(self, target, game_map, speed): 
     # make grid as a numpy array
@@ -15,68 +65,8 @@ def navigate_astar(self, target, game_map, speed):
     for ship in game_map.all_ships():
         hitmap[ship.x][ship.y] = 1
 
-    # convert hitmap into a numpy array
-    hitmap = np.array(hitmap)
+    ##############################################################################
 
-
-    ####################################################################################################################################
-
-
-
-    # GOAL: find the shortest path from ship to target using A* and avoiding planets and other ships
-    # start at ship
-    start = (self.x, self.y)
-    # end at target
-    end = (target.x, target.y)
-    # create a grid of the same size as the map
-    grid = np.zeros((game_map.height, game_map.width))
-    # set the start and end points to 1
-    grid[start] = 1
-    grid[end] = 1
-    # set the hitmap to 0
-    grid[hitmap == 1] = 0
-    # set the ship to 0
-    grid[self.x][self.y] = 0
-    # set the target to 0
-    grid[target.x][target.y] = 0
-    # set the planets to 0
-    for planet in game_map.all_planets():
-        grid[planet.x][planet.y] = 0
-    # set the other ships to 0
-    for ship in game_map.all_ships():
-        if ship != self:
-            grid[ship.x][ship.y] = 0
-    # set the obstacles to 0
-    for obstacle in game_map.all_planets() + game_map.all_ships():
-        grid[obstacle.x][obstacle.y] = 0
-    # set the empty cells to 1
-    grid[grid == 0] = 1
-    # set the start and end points to 0
-    grid[start] = 0
-    grid[end] = 0
-    # set the hitmap to 1
-    grid[hitmap == 1] = 1
-    # set the ship to 1
-    grid[self.x][self.y] = 1
-    # set the target to 1
-    grid[target.x][target.y] = 1
-    # set the planets to 1
-    for planet in game_map.all_planets():
-        grid[planet.x][planet.y] = 1
-    # set the other ships to 1
-    for ship in game_map.all_ships():
-        if ship != self:
-            grid[ship.x][ship.y] = 1
-    # set the obstacles to 1
-    for obstacle in game_map.all_planets() + game_map.all_ships():
-        grid[obstacle.x][obstacle.y] = 1
-    # set the empty cells to 0
-    grid[grid == 1] = 0
-    # set the start and end points to 1
-    grid[start] = 1
-    grid[end] = 1
-    # set the hitmap to 0
-    grid[hitmap == 1] = 0
 
             
 

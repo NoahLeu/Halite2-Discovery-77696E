@@ -19,6 +19,7 @@ class Map:
         self.my_id = my_id
         self.width = width
         self.height = height
+        self.size = width * height
         self._players = {}
         self._planets = {}
 
@@ -44,6 +45,13 @@ class Map:
         """
         return list(self._players.values())
 
+    def all_enemy_ships(self):
+        """
+        :return: List of all enemy ships
+        :rtype: list[Ship]
+        """
+        return [ship for ship in self._all_ships() if ship.owner != self.get_me()]
+    
     def get_planet(self, planet_id):
         """
         :param int planet_id:
@@ -58,6 +66,13 @@ class Map:
         :rtype: list[entity.Planet]
         """
         return list(self._planets.values())
+
+    def all_enemy_planets(self):
+        """
+        :return: List of all enemy planets
+        :rtype: list[Planet]
+        """
+        return [planet for planet in self.all_planets() if planet.owner != self.get_me()]
 
     def nearby_entities_by_distance(self, entity):
         """
@@ -107,6 +122,7 @@ class Map:
         for player in self.all_players():
             all_ships.extend(player.all_ships())
         return all_ships
+
 
     def _intersects_entity(self, target):
         """
@@ -163,6 +179,34 @@ class Player:
         :rtype: list[entity.Ship]
         """
         return list(self._ships.values())
+
+    def free_ships(self):
+        """
+        :return: A list of all ships which belong to the user and are not docked
+        :rtype: list[entity.Ship]
+        """
+        return [ship for ship in self.all_ships() if ship.DockingStatus.UNDOCKED]
+
+    def docking_ships(self):
+        """
+        :return: A list of all ships which belong to the user and are docking
+        :rtype: list[entity.Ship]
+        """
+        return [ship for ship in self.all_ships() if ship.DockingStatus.DOCKING]
+
+    def undocking_ships(self):
+        """
+        :return: A list of all ships which belong to the user and are undocking
+        :rtype: list[entity.Ship]
+        """
+        return [ship for ship in self.all_ships() if ship.DockingStatus.UNDOCKING]
+
+    def docked_ships(self):
+        """
+        :return: A list of all ships which belong to the user and are docked
+        :rtype: list[entity.Ship]
+        """
+        return [ship for ship in self.all_ships() if ship.DockingStatus.DOCKED]
 
     def get_ship(self, ship_id):
         """

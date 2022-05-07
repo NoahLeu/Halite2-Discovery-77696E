@@ -65,6 +65,7 @@ class Entity:
 
         return Position(x, y)
 
+
     @abc.abstractmethod
     def _link(self, players, planets):
         pass
@@ -228,6 +229,8 @@ class Ship(Entity):
         self.id = ship_id
         self.x = x
         self.y = y
+        self.oldx = x
+        self.oldy = y
         self.owner = player_id
         self.radius = constants.SHIP_RADIUS
         self.health = hp
@@ -270,7 +273,7 @@ class Ship(Entity):
         return "u {}".format(self.id)
 
     def navigate(self, target, game_map, speed, avoid_obstacles=True, max_corrections=90, angular_step=1,
-                 ignore_ships=False, ignore_planets=False):
+                 ignore_ships=False, ignore_planets=False, ship_after_turn_positions=[]):
         """
         Move a ship to a specific target position (Entity). It is recommended to place the position
         itself here, else navigate will crash into the target. If avoid_obstacles is set to True (default)
@@ -303,6 +306,10 @@ class Ship(Entity):
             new_target_dx = math.cos(math.radians(angle + angular_step)) * distance
             new_target_dy = math.sin(math.radians(angle + angular_step)) * distance
             new_target = Position(self.x + new_target_dx, self.y + new_target_dy)
+
+            if new_target in ship_after_turn_positions:
+                speed = int(speed - 1)
+
             return self.navigate(new_target, game_map, speed, True, max_corrections - 1, angular_step)
         speed = speed if (distance >= speed) else distance
         return self.thrust(speed, angle)
