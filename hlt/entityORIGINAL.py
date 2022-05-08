@@ -65,7 +65,6 @@ class Entity:
 
         return Position(x, y)
 
-
     @abc.abstractmethod
     def _link(self, players, planets):
         pass
@@ -229,8 +228,6 @@ class Ship(Entity):
         self.id = ship_id
         self.x = x
         self.y = y
-        self.oldx = x
-        self.oldy = y
         self.owner = player_id
         self.radius = constants.SHIP_RADIUS
         self.health = hp
@@ -308,63 +305,6 @@ class Ship(Entity):
             new_target = Position(self.x + new_target_dx, self.y + new_target_dy)
             return self.navigate(new_target, game_map, speed, True, max_corrections - 1, angular_step)
         speed = speed if (distance >= speed) else distance
-        return self.thrust(speed, angle)
-
-
-    def navigateNew(self, target, game_map, speed, avoid_obstacles=True, max_corrections=90, angular_step=1,
-                 ignore_ships=False, ignore_planets=False, ship_after_turn_positions=[]):
-        """
-        Move a ship to a specific target position (Entity). It is recommended to place the position
-        itself here, else navigate will crash into the target. If avoid_obstacles is set to True (default)
-        will avoid obstacles on the way, with up to max_corrections corrections. Note that each correction accounts
-        for angular_step degrees difference, meaning that the algorithm will naively try max_correction degrees before giving
-        up (and returning None). The navigation will only consist of up to one command; call this method again
-        in the next turn to continue navigating to the position.
-
-        :param Entity target: The entity to which you will navigate
-        :param game_map.Map game_map: The map of the game, from which obstacles will be extracted
-        :param int speed: The (max) speed to navigate. If the obstacle is nearer, will adjust accordingly.
-        :param bool avoid_obstacles: Whether to avoid the obstacles in the way (simple pathfinding).
-        :param int max_corrections: The maximum number of degrees to deviate per turn while trying to pathfind. If exceeded returns None.
-        :param int angular_step: The degree difference to deviate if the original destination has obstacles
-        :param bool ignore_ships: Whether to ignore ships in calculations (this will make your movement faster, but more precarious)
-        :param list ship_after_turn_positions: List of ship positions known after the current turn.
-        :param bool ignore_planets: Whether to ignore planets in calculations (useful if you want to crash onto planets)
-        :return string: The command trying to be passed to the Halite engine or None if movement is not possible within max_corrections degrees.
-        :rtype: str
-        """
-        # Assumes a position, not planet (as it would go to the center of the planet otherwise)
-
-        if max_corrections <= 0:
-            return None
-        distance = self.calculate_distance_between(target)
-        angle = self.calculate_angle_between(target)
-        ignore = () if not (ignore_ships or ignore_planets) \
-            else Ship if (ignore_ships and not ignore_planets) \
-            else Planet if (ignore_planets and not ignore_ships) \
-            else Entity
-        if avoid_obstacles and game_map.obstacles_between_advanced(self, target, ignore, ship_after_turn_positions):
-            new_target_dx = math.cos(math.radians(angle + angular_step)) * distance
-            new_target_dy = math.sin(math.radians(angle + angular_step)) * distance
-            new_target = Position(self.x + new_target_dx, self.y + new_target_dy)
-            # calculate new goal to move to and new direction -> safe to ship positions before calling navigate
-
-            newPosX = self.x + math.sin(math.radians(angle + angular_step)) * speed
-            newPosY = self.y + math.sin(math.radians(angle + angular_step)) * speed 
-
-            ship_after_turn_positions.append((newPosX, newPosY))
-
-            return self.navigate(new_target, game_map, speed, True, max_corrections - 1, angular_step, ship_after_turn_positions=ship_after_turn_positions)
-
-        speed = speed if (distance >= speed) else distance
-
-        # calculate new goal to move to and new direction and check if occupied -> reduce speed
-        # calculate new point reached between goal and self based on speed and angle
-        '''for (shipX, shipY) in ship_after_turn_positions:
-            if (newX - shipX) ** 2 + (newY - shipY) ** 2 < constants.SHIP_RADIUS ** 2:
-                logging.info("avoiding ship")
-                speed -= 1
-        '''  
         return self.thrust(speed, angle)
 
     def can_dock(self, planet):

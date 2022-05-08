@@ -1,4 +1,4 @@
-from . import collision, entity, constants
+from . import collision, entity
 
 
 class Map:
@@ -19,7 +19,6 @@ class Map:
         self.my_id = my_id
         self.width = width
         self.height = height
-        self.size = width * height
         self._players = {}
         self._planets = {}
 
@@ -45,13 +44,6 @@ class Map:
         """
         return list(self._players.values())
 
-    def all_enemy_ships(self):
-        """
-        :return: List of all enemy ships
-        :rtype: list[Ship]
-        """
-        return [ship for ship in self._all_ships() if ship.owner != self.get_me()]
-    
     def get_planet(self, planet_id):
         """
         :param int planet_id:
@@ -66,13 +58,6 @@ class Map:
         :rtype: list[entity.Planet]
         """
         return list(self._planets.values())
-
-    def all_enemy_planets(self):
-        """
-        :return: List of all enemy planets
-        :rtype: list[Planet]
-        """
-        return [planet for planet in self.all_planets() if planet.owner != self.get_me()]
 
     def nearby_entities_by_distance(self, entity):
         """
@@ -123,7 +108,6 @@ class Map:
             all_ships.extend(player.all_ships())
         return all_ships
 
-
     def _intersects_entity(self, target):
         """
         Check if the specified entity (x, y, r) intersects any planets. Entity is assumed to not be a planet.
@@ -161,39 +145,6 @@ class Map:
         return obstacles
 
 
-
-    def obstacles_between_advanced(self, ship, target, ignore=(), ship_predictions=[]):
-        """
-        Check whether there is a straight-line path to the given point, without planetary obstacles in between.
-
-        :param entity.Ship ship: Source entity
-        :param entity.Entity target: Target entity
-        :param entity.Entity ignore: Which entity type to ignore
-        :return: The list of obstacles between the ship and target
-        :rtype: list[entity.Entity]
-        """
-        obstacles = []
-        entities = ([] if issubclass(entity.Planet, ignore) else self.all_planets()) \
-            + ([] if issubclass(entity.Ship, ignore) else self._all_ships())
-        for foreign_entity in entities:
-            if foreign_entity == ship or foreign_entity == target:
-                continue
-            if collision.intersect_segment_circle(ship, target, foreign_entity, fudge=ship.radius + 0.1):
-                obstacles.append(foreign_entity)
-        
-        for i, prediction in enumerate(ship_predictions):
-            if prediction == (ship.x, ship.y):
-                continue
-            
-            # create new Entity with the prediction as position
-            predictionEntity = entity.Entity(prediction[0], prediction[1], constants.SHIP_RADIUS, 9999, self.get_me(), "e"+ str(i))
-
-            if collision.intersect_segment_circle(ship, target, predictionEntity, fudge=ship.radius + 0.1):
-                obstacles.append(predictionEntity)
-
-        return obstacles
-
-
 class Player:
     """
     :ivar id: The player's unique id
@@ -212,34 +163,6 @@ class Player:
         :rtype: list[entity.Ship]
         """
         return list(self._ships.values())
-
-    def free_ships(self):
-        """
-        :return: A list of all ships which belong to the user and are not docked
-        :rtype: list[entity.Ship]
-        """
-        return [ship for ship in self.all_ships() if ship.DockingStatus.UNDOCKED]
-
-    def docking_ships(self):
-        """
-        :return: A list of all ships which belong to the user and are docking
-        :rtype: list[entity.Ship]
-        """
-        return [ship for ship in self.all_ships() if ship.DockingStatus.DOCKING]
-
-    def undocking_ships(self):
-        """
-        :return: A list of all ships which belong to the user and are undocking
-        :rtype: list[entity.Ship]
-        """
-        return [ship for ship in self.all_ships() if ship.DockingStatus.UNDOCKING]
-
-    def docked_ships(self):
-        """
-        :return: A list of all ships which belong to the user and are docked
-        :rtype: list[entity.Ship]
-        """
-        return [ship for ship in self.all_ships() if ship.DockingStatus.DOCKED]
 
     def get_ship(self, ship_id):
         """
