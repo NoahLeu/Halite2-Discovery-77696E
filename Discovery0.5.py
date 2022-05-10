@@ -84,6 +84,7 @@ while True:
         MID_GAME = True
 
     logging.info("min_enemy_distance: " + str(min_enemy_distance))
+    EARLY_GAME = False
 
     #if turn > hlt.constants.RUSH_MAX_TURNS or \
      #   min_enemy_distance > hlt.constants.RUSH_MAX_RANGE:

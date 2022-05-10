@@ -71,7 +71,7 @@ def get_initial_planet_scores(game_map):
         # numberOfPlanetsInRadius: [0, 10]
         # distanceToCenter: [0, 250]
 
-        score = 400/dockingSpots + ownAverageDistanceToPlanet/1 + 1000/numberOfPlanetsInRadius + distanceToCenter/1.5
+        score = 1200/dockingSpots + ownAverageDistanceToPlanet/.9 + 400/numberOfPlanetsInRadius + distanceToCenter/3
 
         planet_scores.append([planet, score])
 
@@ -114,7 +114,7 @@ def get_initial_planet_scores2(game_map):
         # numberOfPlanetsInRadius: [0, 10]
         # distanceToCenter: [0, 250]
 
-        score = 400/dockingSpots + ownAverageDistanceToPlanet/1 + 1000/numberOfPlanetsInRadius + distanceToCenter/1.8
+        score = 400/dockingSpots + ownAverageDistanceToPlanet/1 + 400/numberOfPlanetsInRadius + distanceToCenter/1.8
 
         planet_scores.append([planet, score])
 

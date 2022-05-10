@@ -207,7 +207,7 @@ while True:
 
                 for planet in planet_distance_list:
                     planet_enemy_radius = ship.calculate_distance_between(planet[0])
-                    if ships_going_to_planet[planet[0].id] < planet[0].num_docking_spots + len(hlt.calculations.get_enemy_ships_in_radius(game_map, planet[0], planet_enemy_radius)):
+                    if ships_going_to_planet[planet[0].id] < planet[0].num_docking_spots + len(hlt.calculations.get_enemy_ships_in_radius(game_map, planet[0], planet_enemy_radius)) + 2:
                         logging.info("LESS SHIPS IM GOING TO PLANET")
                         # planet has owner
                         if planet[0].is_owned():
@@ -264,7 +264,7 @@ while True:
                                     break
                                 break
                     else:
-                        logging.info("NO OVERCOMMING")
+                        logging.info("NO OVERCOMMITTING")
         
     # ship_after_turn_positions = []
 
