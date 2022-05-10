@@ -1,3 +1,5 @@
+from cmath import log
+from pickle import TRUE
 import hlt
 import logging
 import math
@@ -14,7 +16,7 @@ EARLY_GAME = True
 # rush to enemy and destroy fast
 RUSH_MODE = False
 # focus on expanding and destroying enemies
-MID_GAME = False
+MID_GAME = True
 
 turn = -1
 
@@ -96,6 +98,8 @@ while True:
 
     # ! EXPERIMENTAL for early game
     RUSH_MODE = False
+
+    # EARLY_GAME = False
 
     if RUSH_MODE:
         logging.info("RUSH MODE")
@@ -204,6 +208,7 @@ while True:
                 for planet in planet_distance_list:
                     planet_enemy_radius = ship.calculate_distance_between(planet[0])
                     if ships_going_to_planet[planet[0].id] < planet[0].num_docking_spots + len(hlt.calculations.get_enemy_ships_in_radius(game_map, planet[0], planet_enemy_radius)):
+                        logging.info("LESS SHIPS IM GOING TO PLANET")
                         # planet has owner
                         if planet[0].is_owned():
                             # planet belongs to me and is not full
@@ -258,6 +263,8 @@ while True:
                                     ships_going_to_planet[planet[0].id] += 1
                                     break
                                 break
+                    else:
+                        logging.info("NO OVERCOMMING")
         
     # ship_after_turn_positions = []
 
