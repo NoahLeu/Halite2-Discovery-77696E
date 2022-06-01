@@ -1,1 +1,1 @@
-halite.exe -d "200 230" "python Discovery0.5.py" "python Discovery0.6_PlanetPrio.py"
+halite.exe -d "120 130" "python Discovery0.5.py" "python Discovery0.5noR.py"
