@@ -164,3 +164,4 @@ cython_debug/
 
 # Halite logs
 *.log
+replay-*.hlt
