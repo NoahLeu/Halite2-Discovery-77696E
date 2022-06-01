@@ -1,9 +1,5 @@
-from cmath import log
-from pickle import TRUE
 import hlt
 import logging
-import math
-import time
 
 game = hlt.Game("Discovery 0.6 ALTERED")
 logging.info("Starting my Discovery!")
