@@ -191,7 +191,6 @@ while True:
                                 command_queue.append(navigate_command)
                                 break
                             break
-
         
         if not EARLY_GAME and MID_GAME:
             for ship in game_map.get_me().all_ships():
