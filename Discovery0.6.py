@@ -31,9 +31,7 @@ while True:
 
     turn += 1
 
-    planets = [planet for planet in game_map.all_planets()]
-    # if a planet has 0 ressources it should not be considered a viable planet and removed from our list
-    planets = [planet for planet in planets if planet.remaining_resources > 0]
+    planets = [planet for planet in game_map.all_planets() if planet.remaining_resources > 0]
 
     planets_owned = 0
     for planet in planets:
@@ -131,7 +129,6 @@ while True:
     else:
         if EARLY_GAME:
             continue
-
         
         if not EARLY_GAME and MID_GAME:
             for ship in game_map.get_me().all_ships():
@@ -159,6 +156,8 @@ while True:
                                 if navigate_command:
                                     #ship_after_turn_positions.append((ship.x, ship.y))
                                     command_queue.append(navigate_command)
+                                    # remove planet from list
+                                    planets.remove(planet[0])
                                     break
                                 break
                         # planet belongs to me and is full
@@ -187,13 +186,15 @@ while True:
                     else:
                         if ship.can_dock(planet[0]):
                             command_queue.append(ship.dock(planet[0]))
-                           # ship_after_turn_positions.append((ship.x, ship.y))
+                            # ship_after_turn_positions.append((ship.x, ship.y))
                             break
                         else:
                             navigate_command = ship.navigate(ship.closest_point_to(planet[0]), game_map, speed=int(hlt.constants.MAX_SPEED))
                             if navigate_command:
                                 #ship_after_turn_positions.append((ship.x, ship.y))
                                 command_queue.append(navigate_command)
+                                # remove planet from list
+                                planets.remove(planet[0])
                                 break
                             break
         
