@@ -272,7 +272,7 @@ class Ship(Entity):
         """
         return "u {}".format(self.id)
 
-    def navigate(self, target, game_map, speed, avoid_obstacles=True, max_corrections=90, angular_step=1,
+    def navigateOLD(self, target, game_map, speed, avoid_obstacles=True, max_corrections=90, angular_step=1,
                  ignore_ships=False, ignore_planets=False):
         """
         Move a ship to a specific target position (Entity). It is recommended to place the position
@@ -310,6 +310,57 @@ class Ship(Entity):
         speed = speed if (distance >= speed) else distance
         return self.thrust(speed, angle)
 
+
+    def navigate(self, target, game_map, speed, avoid_obstacles=True, max_corrections=90, angular_step=1,
+                 ignore_ships=False, ignore_planets=False, new_ship_positions=[]):
+        if max_corrections <= 0:
+            return [None, (self.x, self.y)]
+        distance = self.calculate_distance_between(target)
+        angle = self.calculate_angle_between(target)
+        ignore = () if not (ignore_ships or ignore_planets) \
+            else Ship if (ignore_ships and not ignore_planets) \
+            else Planet if (ignore_planets and not ignore_ships) \
+            else Entity
+
+        current_target_dx = math.cos(math.radians(angle)) * distance
+        current_target_dy = math.sin(math.radians(angle)) * distance
+
+        if avoid_obstacles and game_map.obstacles_between(self, target, ignore):
+            new_target_dx = math.cos(math.radians(angle + angular_step)) * distance
+            new_target_dy = math.sin(math.radians(angle + angular_step)) * distance
+            new_target = Position(self.x + new_target_dx, self.y + new_target_dy)
+            return self.navigate(new_target, game_map, speed, True, max_corrections - 1, angular_step, new_ship_positions = new_ship_positions)
+        elif avoid_obstacles:
+            if distance > speed:
+                new_target_dx = math.cos(math.radians(angle)) * speed
+                new_target_dy = math.sin(math.radians(angle)) * speed
+                new_speed = speed
+            else:
+                new_target_dx = math.cos(math.radians(angle + angular_step)) * distance
+                new_target_dy = math.sin(math.radians(angle + angular_step)) * distance
+                new_speed = distance
+
+            collision = True
+
+            redirected = False
+
+            while collision:
+                collision = False
+                for (x,y) in new_ship_positions:
+                    distance_between = ((x - (self.x + current_target_dx))**2 + (y - (self.y + current_target_dy))**2)**0.5
+
+                    if distance_between <= constants.SHIP_RADIUS:
+                        current_target_dx = math.cos(math.radians(angle + angular_step)) * (new_speed - constants.SHIP_RADIUS)
+                        current_target_dy = math.sin(math.radians(angle + angular_step)) * (new_speed - constants.SHIP_RADIUS)
+                        redirected = True
+                        collision = True
+
+            new_target = Position(self.x + current_target_dx, self.y + current_target_dy)
+            if redirected:
+                return self.navigate(new_target, game_map, new_speed, True, max_corrections - 1, angular_step, new_ship_positions = new_ship_positions)
+
+        speed = speed if (distance >= speed) else distance
+        return [self.thrust(speed, angle), (self.x + current_target_dx, self.y + current_target_dy)]
 
     def navigateNew(self, target, game_map, speed, avoid_obstacles=True, max_corrections=90, angular_step=1,
                  ignore_ships=False, ignore_planets=False, ship_after_turn_positions=[]):

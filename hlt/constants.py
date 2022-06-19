@@ -23,12 +23,18 @@ BASE_PRODUCTIVITY = 6
 #: Distance from the planets edge at which new ships are created
 SPAWN_RADIUS = 2.0
 
+
+# CUSTOM CONSTANTS
+
 MAX_TURN_LENGTH = 1.7
 
-RUSH_MAP_SIZE_MAX = 30000
+RUSH_MAP_SIZE_MAX = 20
 RUSH_MAX_TURNS = 30
 RUSH_MAX_RANGE = MAX_SPEED * RUSH_MAX_TURNS
 
-EARLY_GAME_MAX_SHIPS = 6
-EARLY_GAME_SAFE_DISTANCE = MAX_SPEED * DOCK_TURNS * WEAPON_RADIUS + DOCK_RADIUS
-EARLY_GAME_MAX_TURNS = 20
+EARLY_GAME_MAX_SHIPS = 5
+EARLY_GAME_SAFE_DISTANCE = 1000* MAX_SPEED * DOCK_TURNS * WEAPON_RADIUS + DOCK_RADIUS
+EARLY_GAME_MAX_TURNS = 40
+
+# early game big and small map differences
+# for travelling to planet: if amount travelling more than docking spots + enemies in radius + X then choose next planet

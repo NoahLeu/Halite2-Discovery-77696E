@@ -3,16 +3,16 @@ import logging
 import math
 import time
 
-game = hlt.Game("Discovery 0.5 new nav")
+game = hlt.Game("Discovery 0.5 no r")
 logging.info("Starting my Discovery!")
 
 
 ALLOW_DOCKING = True
 
 # focus on getting first planet
-EARLY_GAME = True
+EARLY_GAME = False
 # rush to enemy and destroy fast
-RUSH_MODE = True
+RUSH_MODE = False
 # focus on expanding and destroying enemies
 MID_GAME = False
 
@@ -27,7 +27,6 @@ while True:
     game_map = game.update_map()
 
     command_queue = []
-    new_ship_positions = []
 
     turn += 1
 
@@ -39,10 +38,10 @@ while True:
             planets_owned += 1
             continue
 
-    if turn == 0 and hlt.strats.rush_on_game_start(game_map):
-        RUSH_MODE = True
-        logging.info("RUSH MODE ACTIVATED")
-        # ALLOW_DOCKING = False
+    #if turn == 0 and hlt.strats.rush_on_game_start(game_map):
+    #    RUSH_MODE = True
+    #    logging.info("RUSH MODE ACTIVATED")
+    #    # ALLOW_DOCKING = False
 
     # get all ships
     my_free_ships = game_map.get_me().free_ships()
@@ -59,8 +58,8 @@ while True:
 
     min_enemy_distance = 9999999
 
-
-    '''if EARLY_GAME or RUSH_MODE:
+    '''
+    if EARLY_GAME or RUSH_MODE:
         # ! heavy calculation here    
         # for every ship find distance to closest enemy ship
         for ship in my_free_ships + my_docked_ships + my_docking_ships + my_undocking_ships:
@@ -117,9 +116,11 @@ while True:
                     if ship_to_enemy_distance <= 12:
                         ship_speed = int(ship_to_enemy_distance - 5)
 
-                    [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(enemy), game_map, speed=ship_speed, new_ship_positions = new_ship_positions)
-                    new_ship_positions.append((x, y))
+                    # ship simulate movement
+
+                    navigate_command = ship.navigate(ship.closest_point_to(enemy), game_map, speed=ship_speed)
                     if navigate_command:
+                        #ship_after_turn_positions.append((ship.x, ship.y))
                         command_queue.append(navigate_command)
                         break
                     break
