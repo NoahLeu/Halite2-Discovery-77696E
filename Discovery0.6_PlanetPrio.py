@@ -1,7 +1,7 @@
 import hlt
 import logging
 
-game = hlt.Game("Discovery 0.6 PlanetPrio")
+game = hlt.Game("Discovery 0.6 PlanetPrio Leaver")
 logging.info("Starting my Discovery!")
 
 
@@ -30,7 +30,7 @@ while True:
 
     turn += 1
 
-    planets = [planet for planet in game_map.all_planets()]
+    planets = [planet for planet in game_map.all_planets() if planet.remaining_resources > 0]
 
     planets_owned = 0
     for planet in planets:
@@ -136,6 +136,8 @@ while True:
             for ship in game_map.get_me().all_ships():
 
                 if ship.docking_status != ship.DockingStatus.UNDOCKED:
+                    if ship.planet.remaining_resources == 0:
+                        command_queue.append(ship.undock())
                     continue
 
                 for planet in planet_priority_list:
@@ -144,7 +146,8 @@ while True:
 
                     if planet[0].is_owned():
                         # planet belongs to me and is not full
-                        if planet[0].all_docked_ships()[0].owner == game_map.get_me() and not planet[0].is_full():
+                        if planet[0].all_docked_ships()[0].owner == game_map.get_me() and not planet[0].is_full() and not planet[0].remaining_resources == 0:
+
                             if ship.can_dock(planet[0]):
                                 command_queue.append(ship.dock(planet[0]))
                                 #ship_after_turn_positions.append((ship.x, ship.y))
@@ -197,6 +200,8 @@ while True:
         if not EARLY_GAME and MID_GAME:
             for ship in game_map.get_me().all_ships():
                 if ship.docking_status != ship.DockingStatus.UNDOCKED:
+                    if ship.planet.remaining_resources == 0:
+                        command_queue.append(ship.undock())
                     continue
 
                 planet_distance_list = [[planet, ship.calculate_distance_between(planet)] for planet in planets]
