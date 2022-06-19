@@ -92,11 +92,6 @@ while True:
       #  logging.info("RUSH MODE DEACTIVATED")
        # RUSH_MODE = False
 
-    # ! EXPERIMENTAL for early game
-    RUSH_MODE = False
-
-    # EARLY_GAME = False
-
     if RUSH_MODE:
         logging.info("RUSH MODE")
         # attack enemy ships and destroy them without docking

@@ -272,7 +272,7 @@ class Ship(Entity):
         """
         return "u {}".format(self.id)
 
-    def navigate(self, target, game_map, speed, avoid_obstacles=True, max_corrections=90, angular_step=1,
+    def navigateOLD(self, target, game_map, speed, avoid_obstacles=True, max_corrections=90, angular_step=1,
                  ignore_ships=False, ignore_planets=False):
         """
         Move a ship to a specific target position (Entity). It is recommended to place the position
@@ -311,7 +311,7 @@ class Ship(Entity):
         return self.thrust(speed, angle)
 
 
-    def navigateNewww(self, target, game_map, speed, avoid_obstacles=True, max_corrections=90, angular_step=1,
+    def navigate(self, target, game_map, speed, avoid_obstacles=True, max_corrections=90, angular_step=1,
                  ignore_ships=False, ignore_planets=False, new_ship_positions=[]):
         if max_corrections <= 0:
             return [None, (self.x, self.y)]
@@ -329,17 +329,38 @@ class Ship(Entity):
             new_target_dx = math.cos(math.radians(angle + angular_step)) * distance
             new_target_dy = math.sin(math.radians(angle + angular_step)) * distance
             new_target = Position(self.x + new_target_dx, self.y + new_target_dy)
-            return self.navigateNewww(new_target, game_map, speed, True, max_corrections - 1, angular_step, new_ship_positions = new_ship_positions)
+            return self.navigate(new_target, game_map, speed, True, max_corrections - 1, angular_step, new_ship_positions = new_ship_positions)
         elif avoid_obstacles:
-            for (x,y) in new_ship_positions:
-                distance_between = ((x - current_target_dx)**2 + (y - current_target_dy)**2)**0.5
-                if distance_between <= constants.SHIP_RADIUS:
-                    new_target_dx = math.cos(math.radians(angle + angular_step)) * distance
-                    new_target_dy = math.sin(math.radians(angle + angular_step)) * distance
-                    new_target = Position(self.x + new_target_dx, self.y + new_target_dy)
-                    return self.navigateNewww(new_target, game_map, speed, True, max_corrections - 1, angular_step, new_ship_positions = new_ship_positions)
+            if distance > speed:
+                new_target_dx = math.cos(math.radians(angle)) * speed
+                new_target_dy = math.sin(math.radians(angle)) * speed
+                new_speed = speed
+            else:
+                new_target_dx = math.cos(math.radians(angle + angular_step)) * distance
+                new_target_dy = math.sin(math.radians(angle + angular_step)) * distance
+                new_speed = distance
+
+            collision = True
+
+            redirected = False
+
+            while collision:
+                collision = False
+                for (x,y) in new_ship_positions:
+                    distance_between = ((x - (self.x + current_target_dx))**2 + (y - (self.y + current_target_dy))**2)**0.5
+
+                    if distance_between <= constants.SHIP_RADIUS:
+                        current_target_dx = math.cos(math.radians(angle + angular_step)) * (new_speed - constants.SHIP_RADIUS)
+                        current_target_dy = math.sin(math.radians(angle + angular_step)) * (new_speed - constants.SHIP_RADIUS)
+                        redirected = True
+                        collision = True
+
+            new_target = Position(self.x + current_target_dx, self.y + current_target_dy)
+            if redirected:
+                return self.navigate(new_target, game_map, new_speed, True, max_corrections - 1, angular_step, new_ship_positions = new_ship_positions)
+
         speed = speed if (distance >= speed) else distance
-        return [self.thrust(speed, angle), (current_target_dx, current_target_dy)]
+        return [self.thrust(speed, angle), (self.x + current_target_dx, self.y + current_target_dy)]
 
     def navigateNew(self, target, game_map, speed, avoid_obstacles=True, max_corrections=90, angular_step=1,
                  ignore_ships=False, ignore_planets=False, ship_after_turn_positions=[]):
