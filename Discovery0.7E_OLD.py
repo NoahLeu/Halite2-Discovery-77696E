@@ -1,7 +1,7 @@
 import hltDiscovery as hlt
 import logging
 
-game = hlt.Game("Discovery 0.6 NEW")
+game = hlt.Game("Discovery 0.7 E OLD")
 logging.info("Starting my Discovery!")
 
 
@@ -78,6 +78,14 @@ while True:
 
     logging.info("Current mode: EARLY_GAME = {}, RUSH_MODE = {}, MID_GAME = {}, LATE_GAME = {}".format(EARLY_GAME, RUSH_MODE, MID_GAME, LATE_GAME))
         
+
+    # ! experimental
+    #RUSH_MODE = False
+    #EARLY_GAME = False
+    #MID_GAME = True
+    #LATE_GAME = False
+
+
     if RUSH_MODE:
         logging.info("RUSH MODE")
         first_ship = my_free_ships[0]

@@ -27,6 +27,9 @@ def get_enemy_ships_by_distance(game_map, entity):
     return enemyShipList
 
 
+def get_enemy_min_distance(game_map, entity):
+    enemyShipsByDistance = get_enemy_ships_by_distance(game_map, entity)
+    return entity.calculate_distance_between(enemyShipsByDistance[0])
 
 
 def get_enemy_ships_in_radius(game_map, entity, radius):

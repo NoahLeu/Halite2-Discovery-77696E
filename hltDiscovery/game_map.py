@@ -87,6 +87,17 @@ class Map:
             result.setdefault(entity.calculate_distance_between(foreign_entity), []).append(foreign_entity)
         return result
 
+    def nearby_enemies_and_planets_by_distance(self, entity):
+        """
+        :param entity: The source entity to find distances from
+        :return: Dict containing all entities with their designated distances
+        :rtype: dict
+        """
+        relevant_planets = [planet for planet in self.all_planets() if planet.remaining_resources > 0]
+        result = self.all_enemy_ships() + relevant_planets
+        result.sort(key=lambda x: x.calculate_distance_between(entity))
+        return result
+
     def _link(self):
         """
         Updates all the entities with the correct ship and planet objects

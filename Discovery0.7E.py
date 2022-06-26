@@ -1,14 +1,14 @@
 import hltDiscovery as hlt
 import logging
 
-game = hlt.Game("Discovery 0.6 NEW")
+game = hlt.Game("Discovery 0.7 E")
 logging.info("Starting my Discovery!")
-
-
 
 turn = -1
 
 planets_first_turn = []
+
+first_planet = None
 
 while True:
     # focus on getting first planet
@@ -41,13 +41,11 @@ while True:
 
     if turn == 0 and hlt.strats.rush_on_game_start(game_map):
         RUSH_MODE = True
+        EARLY_GAME = False
         logging.info("RUSH MODE ACTIVATED")
 
     my_free_ships = game_map.get_me().free_ships()
-    my_docked_ships = game_map.get_me().docked_ships()
-    my_docking_ships = game_map.get_me().docking_ships()
-    my_undocking_ships = game_map.get_me().undocking_ships()
-
+    my_planets_count = len([x for x in game_map.all_planets() if x.owner == game_map.get_me()])
     my_ship_count = len(game_map.get_me().all_ships())
 
     enemy_ships = game_map.all_enemy_ships()
@@ -60,13 +58,11 @@ while True:
         ships_going_to_planet[planet.id] = 0
 
     if EARLY_GAME and (turn > hlt.constants.EARLY_GAME_MAX_TURNS or \
-        my_ship_count > hlt.constants.EARLY_GAME_MAX_SHIPS):
+        my_ship_count > hlt.constants.EARLY_GAME_MAX_SHIPS or \
+        planets_owned > hlt.constants.EARLY_GAME_MAX_PLANETS):
         EARLY_GAME = False
         MID_GAME = True
         LATE_GAME = False
-
-    # ! EXPERIMENTAL for early game
-    RUSH_MODE = False
 
     logging.info("planet amount: " + str(len(planets)))
 
@@ -107,10 +103,40 @@ while True:
     elif EARLY_GAME:
         logging.info("EARLY GAME")
 
+        # initial setup on first turn
         if turn == 0:
             planet_priority_list = hlt.calculations.get_initial_planet_scores(game_map)
+            first_planet = planet_priority_list[0]
+            planet_priority_list.remove(first_planet)
 
         for ship in game_map.get_me().all_ships():
+            min_enemy_dist = hlt.calculations.get_enemy_min_distance(game_map, ship)
+
+            if ship.docking_status != ship.DockingStatus.UNDOCKED:
+                if min_enemy_dist < hlt.constants.EARLY_GAME_SAFE_DISTANCE:
+                    command_queue.append(ship.undock())
+                continue
+
+            # free and able to fight
+
+            if my_planets_count == 0:
+                # go to first planet
+                pass
+
+            else:
+                # go to next planet based on distance from first one
+                pass
+
+
+            
+            # if enemy is close find next friendly ship
+            # if enemy is far find next planet
+
+
+    
+
+        # movement for all turns in early game
+        ''' for ship in game_map.get_me().all_ships():
             if turn != 0:
                 planet_distance_list = [[planet, ship.calculate_distance_between(planet)] for planet in planets]
                 planet_distance_list.sort(key=lambda x: x[1])
@@ -177,7 +203,7 @@ while True:
                             command_queue.append(navigate_command)
                             break
                         break
-
+        '''
     elif MID_GAME:
         logging.info("MID GAME")
         for ship in game_map.get_me().all_ships():
