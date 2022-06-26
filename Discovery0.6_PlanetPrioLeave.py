@@ -5,20 +5,21 @@ game = hlt.Game("Discovery 0.6 NEW")
 logging.info("Starting my Discovery!")
 
 
-# focus on getting first planet
-EARLY_GAME = True
-# rush to enemy and destroy fast
-RUSH_MODE = False
-# focus on expanding and destroying enemies
-MID_GAME = False
-# focus on attacking enemy ships
-LATE_GAME = False
 
 turn = -1
 
 planets_first_turn = []
 
 while True:
+    # focus on getting first planet
+    EARLY_GAME = True
+    # rush to enemy and destroy fast
+    RUSH_MODE = False
+    # focus on expanding and destroying enemies
+    MID_GAME = False
+    # focus on attacking enemy ships
+    LATE_GAME = False
+
     # Do not exceed MAX_TURN_LENGTH
     # startOfTurn = time.time()
 
@@ -62,11 +63,14 @@ while True:
         my_ship_count > hlt.constants.EARLY_GAME_MAX_SHIPS):
         EARLY_GAME = False
         MID_GAME = True
+        LATE_GAME = False
 
     # ! EXPERIMENTAL for early game
     RUSH_MODE = False
 
-    if len(planets) == 0:
+    logging.info("planet amount: " + str(len(planets)))
+
+    if len(planets) == 0 or planets_owned == len(planets):
         RUSH_MODE = False
         EARLY_GAME = False
         MID_GAME = False
@@ -243,35 +247,34 @@ while True:
 
     elif LATE_GAME:
         logging.info("LATE GAME")
-        # find closest enemy ship to attack and attack with all ships
-        closest_enemy_ship = None
-        closest_enemy_ship_distance = float("inf")
+
         for ship in game_map.get_me().all_ships():
+            if ship.docking_status != ship.DockingStatus.UNDOCKED:
+                if ship.planet.remaining_resources == 0:
+                    command_queue.append(ship.undock())
+                continue
+
             for enemy_ship in game_map.all_enemy_ships():
-                if ship.calculate_distance_between(enemy_ship) < closest_enemy_ship_distance:
-                    closest_enemy_ship = enemy_ship
-                    closest_enemy_ship_distance = ship.calculate_distance_between(enemy_ship)
-        
-        logging.info("closest enemy ship: " + str(closest_enemy_ship))
-        
-        if closest_enemy_ship:
-            ship_amount = len(game_map.get_me().all_ships())
-            logging.info("ship amount: " + str(ship_amount))
-            for ship in game_map.get_me().all_ships():
-                closest_enemy_ship_distance = ship.calculate_distance_between(closest_enemy_ship)
-                if closest_enemy_ship_distance <= hlt.constants.WEAPON_RADIUS:
+                enemy_ships_by_distance = [[e_ship, ship.calculate_distance_between(e_ship)] for e_ship in enemy_ships]
+                enemy_ships_by_distance.sort(key=lambda x: x[1])
+
+            for enemy in enemy_ships_by_distance:
+                enemy_ship = enemy[0]
+                own_distance = enemy[1]
+
+                if own_distance <= 5:
                     continue
 
                 ship_speed = int(hlt.constants.MAX_SPEED)
 
-                if closest_enemy_ship_distance <= 12:
-                    ship_speed = int(closest_enemy_ship_distance - 5)
+                if own_distance <= 12:
+                    ship_speed = int(own_distance - 5)
 
-                [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(closest_enemy_ship), game_map, speed=ship_speed, new_ship_positions = new_ship_positions)
+                [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(enemy_ship), game_map, speed=ship_speed, new_ship_positions = new_ship_positions)
                 new_ship_positions.append((x, y))
                 if navigate_command:
                     command_queue.append(navigate_command)
                     break
-                break
+
 
     game.send_command_queue(command_queue)

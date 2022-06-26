@@ -1,8 +1,6 @@
 import hltDiscovery as hlt
 import logging
 
-from hltDiscovery import constants
-
 game = hlt.Game("Discovery 0.6 OLD")
 logging.info("Starting my Discovery!")
 
@@ -135,7 +133,7 @@ while True:
                         if distance < closest_enemy_ship_distance:
                             closest_enemy_ship_distance = distance
                     
-                    if closest_enemy_ship_distance < constants.UNDOCK_RADIUS:
+                    if closest_enemy_ship_distance < hlt.constants.UNDOCK_RADIUS:
                         command_queue.append(ship.undock())
                     continue
                 '''
