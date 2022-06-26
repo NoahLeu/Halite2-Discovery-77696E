@@ -1,4 +1,4 @@
-import hlt
+import hltDiscovery as hlt
 import logging
 import math
 import time

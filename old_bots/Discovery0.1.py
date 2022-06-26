@@ -14,13 +14,13 @@ Docs:
 https://2017.forums.halite.io/c/documentation.html
 """
 # Let's start by importing the Halite Starter Kit so we can interface with the Halite engine
-import hlt
+import hltDiscovery
 # Then let's import the logging module so we can print out information
 import logging
 
 # GAME START
 # Here we define the bot's name as Settler and initialize the game, including communication with the Halite engine.
-game = hlt.Game("Discovery 77696E.0.1")
+game = hltDiscovery.Game("Discovery 77696E.0.1")
 # Then we print our start message to the logs
 logging.info("Starting my Settler bot!")
 
@@ -62,7 +62,7 @@ while True:
                 navigate_command = ship.navigate(
                     ship.closest_point_to(planet),
                     game_map,
-                    speed=int(hlt.constants.MAX_SPEED/2),
+                    speed=int(hltDiscovery.constants.MAX_SPEED/2),
                     ignore_ships=True)
                 # If the move is possible, add it to the command_queue (if there are too many obstacles on the way
                 # or we are trapped (or we reached our destination!), navigate_command will return null;

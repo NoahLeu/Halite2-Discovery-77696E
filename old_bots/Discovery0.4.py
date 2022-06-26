@@ -1,7 +1,7 @@
-import hlt
+import hltDiscovery
 import logging
 
-game = hlt.Game("Discovery 0.3")
+game = hltDiscovery.Game("Discovery 0.4")
 logging.info("Starting my Discovery!")
 
 while True:
@@ -24,27 +24,23 @@ while True:
         planet_distance_list.sort(key=lambda x: x[1])
         
 
-        if planets_owned != len(planets):
-            for planet in planet_distance_list:
-                if planet[0].is_owned():
-                    continue
-                else:
+        for planet in planet_distance_list:
+            if planet[0].is_owned():
+                #if planet[0].all_docked_ships()[0].owner == game_map.get_me() and planets[0].is_full():
+                 #    continue
+                if planet[0].all_docked_ships()[0].owner == game_map.get_me() and not planet[0].is_full():
                     if ship.can_dock(planet[0]):
-                        # logging.info("Docking ship: ", str(ship.id), " to planet: ", str(planet[0].id))
                         command_queue.append(ship.dock(planet[0]))
                         break
                     else:
-                        navigate_command = ship.navigate(ship.closest_point_to(planet[0]), game_map, speed=int(hlt.constants.MAX_SPEED))
+                        navigate_command = ship.navigate(ship.closest_point_to(planet[0]), game_map, speed=int(hltDiscovery.constants.MAX_SPEED))
                         if navigate_command:
                             command_queue.append(navigate_command)
                             break
                         break
-        
-        else:
-            for planet in planet_distance_list:
-                if planet[0].all_docked_ships()[0].owner == game_map.get_me():
+                elif planet[0].all_docked_ships()[0].owner == game_map.get_me() and planet[0].is_full():
                     continue
-                else:
+                elif planet[0].all_docked_ships()[0].owner != game_map.get_me(): 
                     enemy_ships_at_planet_sorted_distance = [[e_ship, ship.calculate_distance_between(e_ship)] for e_ship in planet[0].all_docked_ships()]
                     enemy_ships_at_planet_sorted_distance.sort(key=lambda x: x[1])
 
@@ -52,7 +48,7 @@ while True:
                     if ship_to_enemy_distance < 6:
                         continue
                     else:
-                        ship_speed = int(hlt.constants.MAX_SPEED)
+                        ship_speed = int(hltDiscovery.constants.MAX_SPEED)
                         if ship_to_enemy_distance <= 12:
                             ship_speed = int(ship_to_enemy_distance - 5)
 
@@ -61,5 +57,26 @@ while True:
                             command_queue.append(navigate_command)
                             break
                         break
+                else:
+                    if ship.can_dock(planet[0]):
+                        command_queue.append(ship.dock(planet[0]))
+                        break
+                    else:
+                        navigate_command = ship.navigate(ship.closest_point_to(planet[0]), game_map, speed=int(hltDiscovery.constants.MAX_SPEED))
+                        if navigate_command:
+                            command_queue.append(navigate_command)
+                            break
+                        break
+            else:
+                if ship.can_dock(planet[0]):
+                    command_queue.append(ship.dock(planet[0]))
+                    break
+                else:
+                    navigate_command = ship.navigate(ship.closest_point_to(planet[0]), game_map, speed=int(hltDiscovery.constants.MAX_SPEED))
+                    if navigate_command:
+                        command_queue.append(navigate_command)
+                        break
+                    break
+        
         
     game.send_command_queue(command_queue)

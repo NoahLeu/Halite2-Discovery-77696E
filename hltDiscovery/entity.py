@@ -336,8 +336,8 @@ class Ship(Entity):
                 new_target_dy = math.sin(math.radians(angle)) * speed
                 new_speed = speed
             else:
-                new_target_dx = math.cos(math.radians(angle + angular_step)) * distance
-                new_target_dy = math.sin(math.radians(angle + angular_step)) * distance
+                new_target_dx = math.cos(math.radians(angle)) * distance
+                new_target_dy = math.sin(math.radians(angle)) * distance
                 new_speed = distance
 
             collision = True
@@ -347,15 +347,15 @@ class Ship(Entity):
             while collision:
                 collision = False
                 for (x,y) in new_ship_positions:
-                    distance_between = ((x - (self.x + current_target_dx))**2 + (y - (self.y + current_target_dy))**2)**0.5
+                    distance_between = ((x - (self.x + new_target_dx))**2 + (y - (self.y + new_target_dy))**2)**0.5
 
                     if distance_between <= constants.SHIP_RADIUS:
-                        current_target_dx = math.cos(math.radians(angle + angular_step)) * (new_speed - constants.SHIP_RADIUS)
-                        current_target_dy = math.sin(math.radians(angle + angular_step)) * (new_speed - constants.SHIP_RADIUS)
+                        new_target_dx = math.cos(math.radians(angle)) * (new_speed - constants.SHIP_RADIUS)
+                        new_target_dy = math.sin(math.radians(angle)) * (new_speed - constants.SHIP_RADIUS)
                         redirected = True
                         collision = True
 
-            new_target = Position(self.x + current_target_dx, self.y + current_target_dy)
+            new_target = Position(self.x + new_target_dx, self.y + new_target_dy)
             if redirected:
                 return self.navigate(new_target, game_map, new_speed, True, max_corrections - 1, angular_step, new_ship_positions = new_ship_positions)
 

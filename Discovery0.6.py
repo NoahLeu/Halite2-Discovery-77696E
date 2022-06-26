@@ -1,8 +1,5 @@
-from errno import EALREADY
-import hlt
+import hltDiscovery as hlt
 import logging
-import math
-import time
 
 game = hlt.Game("Discovery 0.6")
 logging.info("Starting my Discovery!")

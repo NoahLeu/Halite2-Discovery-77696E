@@ -1,4 +1,5 @@
-import hlt
+import hltDiscovery
+import logging
 
 def get_distance_between_pos_entity(position, entity):
     entityX = entity.x
@@ -59,7 +60,7 @@ def get_initial_planet_scores(game_map):
         ownAverageDistanceToPlanet = 0
         for ship in game_map.get_me().all_ships():
             ownAverageDistanceToPlanet += planet.calculate_distance_between(ship) - planet.radius
-        ownAverageDistanceToPlanet = ownAverageDistanceToPlanet / len(game_map.get_me().all_ships())
+        ownAverageDistanceToPlanet /= len(game_map.get_me().all_ships())
 
         distanceToCenter = get_distance_between_pos_entity([0,0], planet) - planet.radius
 
@@ -71,11 +72,23 @@ def get_initial_planet_scores(game_map):
         # numberOfPlanetsInRadius: [0, 10]
         # distanceToCenter: [0, 250]
 
-        score = 1200/dockingSpots + ownAverageDistanceToPlanet/.9 + 400/numberOfPlanetsInRadius + distanceToCenter/3
+        # score smaller = better
+
+        # score = 1200/dockingSpots + ownAverageDistanceToPlanet/.5 + 400/numberOfPlanetsInRadius + distanceToCenter/3
+
+        dockingSpots = 1/dockingSpots
+        ownAverageDistanceToPlanet = 1/ownAverageDistanceToPlanet / 100
+        numberOfPlanetsInRadius = 1/numberOfPlanetsInRadius / 4
+        distanceToCenter = 1/distanceToCenter / 100
+
+        score = dockingSpots + ownAverageDistanceToPlanet + numberOfPlanetsInRadius + distanceToCenter
 
         planet_scores.append([planet, score])
 
+    # sort planet_scores so that the lowest score is first in the list sorted by second element
     planet_scores.sort(key=lambda x: x[1])
+
+    logging.info("planet_scores: " + str(planet_scores))
 
     return planet_scores
 

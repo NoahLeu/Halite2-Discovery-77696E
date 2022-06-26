@@ -33,8 +33,9 @@ RUSH_MAX_TURNS = 30
 RUSH_MAX_RANGE = MAX_SPEED * RUSH_MAX_TURNS
 
 EARLY_GAME_MAX_SHIPS = 5
-EARLY_GAME_SAFE_DISTANCE = 1000* MAX_SPEED * DOCK_TURNS * WEAPON_RADIUS + DOCK_RADIUS
+EARLY_GAME_SAFE_DISTANCE = MAX_SPEED * DOCK_TURNS * WEAPON_RADIUS + DOCK_RADIUS
 EARLY_GAME_MAX_TURNS = 40
+UNDOCK_RADIUS = DOCK_RADIUS + MAX_SPEED * DOCK_TURNS + WEAPON_RADIUS 
 
 # early game big and small map differences
 # for travelling to planet: if amount travelling more than docking spots + enemies in radius + X then choose next planet

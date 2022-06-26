@@ -1,7 +1,5 @@
-import hlt
+import hltDiscovery as hlt
 import logging
-import math
-import time
 
 game = hlt.Game("Discovery 0.5 no r")
 logging.info("Starting my Discovery!")
