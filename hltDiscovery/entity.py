@@ -292,7 +292,7 @@ class Ship(Entity):
             new_target = Position(self.x + new_target_dx, self.y + new_target_dy)
             return self.navigate(new_target, game_map, speed, True, max_corrections - 1, angular_step, new_ship_positions = new_ship_positions)
 
-        if avoid_obstacles and game_map.obstacles_between_own_collisions(self, target, new_ship_positions, ignore) != []:
+        if avoid_obstacles and len(game_map.obstacles_between_own_collisions(self, target, new_ship_positions, ignore)) != 0:
             new_target_dx = math.cos(math.radians(angle + angular_step)) * distance
             new_target_dy = math.sin(math.radians(angle + angular_step)) * distance
             new_target = Position(self.x + new_target_dx, self.y + new_target_dy)
@@ -300,10 +300,8 @@ class Ship(Entity):
 
         speed = speed if (distance >= speed) else distance
 
-        if distance >= speed:
-            x_change_new = math.cos(math.radians(angle)) * speed
-            y_change_new = math.sin(math.radians(angle)) * speed
-            return [self.thrust(speed, angle), (self.x + x_change_new, self.y + y_change_new)]
+        current_target_dx = math.cos(math.radians(angle)) * speed
+        current_target_dy = math.sin(math.radians(angle)) * speed
 
         return [self.thrust(speed, angle), (self.x + current_target_dx, self.y + current_target_dy)]
 

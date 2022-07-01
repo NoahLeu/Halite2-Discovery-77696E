@@ -51,6 +51,8 @@ while True:
     for e_ship in enemy_ships:
         ships_following_enemy[e_ship.id] = 0
 
+    logging.info("start of turn docking ships: {}".format(len(my_docking_ships) + len(my_undocking_ships) + len(my_docked_ships)))
+
     if RUSH_MODE:
         EARLY_GAME = False
         MID_GAME = False
@@ -64,9 +66,6 @@ while True:
     logging.info("Current mode: EARLY_GAME = {}, RUSH_MODE = {}, MID_GAME = {}".format(EARLY_GAME, RUSH_MODE, MID_GAME))
 
     if EARLY_GAME:
-        # ! DO MANY CALCULATIONS -> PERFORMANCE NOT EFFECTED DURING EARLY GAME
-        #logging.info("EARLY GAME")
-
         allow_docking_for_ship = {}
         ships_in_critical_zone = set()
         my_ships = game_map.get_me().all_ships()
@@ -113,20 +112,23 @@ while True:
                 allow_docking_for_ship[my_ships_sorted[0].id] = False
 
         if ships_in_critical_zone_count > 1 or (ships_in_critical_zone_count == 1 and len(enemy_ships) == 1):
-            #logging.info("CRITICAL ZONE RUSH")
-            # activate rush mode and battle it out
-            #for ship in my_ships: 
-            #    if ship.docking_status != ship.DockingStatus.UNDOCKED:
-            #        command_queue.append(ship.undock())
-                
-            EARLY_GAME = False
-            MID_GAME = False
-            RUSH_MODE = True
-            
-        logging.info(allow_docking_for_ship)
-        
+            logging.info("CRITICAL ZONE RUSH")
+
+            # check if all ships are undocked
+            if len([ship for ship in my_ships if ship.docking_status == ship.DockingStatus.UNDOCKED]) == len(my_ships): 
+                logging.info("activating rush")
+                EARLY_GAME = False
+                MID_GAME = False
+                RUSH_MODE = True
+            else:
+                for ship in my_ships: 
+                    if ship.docking_status != ship.DockingStatus.UNDOCKED:
+                        command_queue.append(ship.undock())
+
+                game.send_command_queue(command_queue)
+                continue
+                    
         if not RUSH_MODE:
-            #logging.info("rush inactive")
             i = 0
             my_ship_positions = [(ship.x, ship.y) for ship in my_ships]
             avg_ship_x = sum([ship.x for ship in my_ships]) / len(my_ships)
@@ -182,7 +184,7 @@ while True:
                                     break
                                 else:
                                     #logging.info("MOVE TO OWNED PLANET")
-                                    [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(planet), game_map, speed=int(hlt.constants.MAX_SPEED), new_ship_positions = new_ship_positions)
+                                    [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(planet), game_map, speed=int(hlt.constants.MAX_SPEED), max_corrections=150, new_ship_positions = new_ship_positions)
                                     new_ship_positions.append((x, y))
                                     if navigate_command:
                                         command_queue.append(navigate_command)
@@ -200,7 +202,7 @@ while True:
                                     break
                                 else:
                                     #logging.info("MOVE TO OWNED PLANET")
-                                    [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(planet), game_map, speed=int(hlt.constants.MAX_SPEED), new_ship_positions = new_ship_positions)
+                                    [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(planet), game_map, speed=int(hlt.constants.MAX_SPEED), max_corrections=150, new_ship_positions = new_ship_positions)
                                     new_ship_positions.append((x, y))
                                     if navigate_command:
                                         command_queue.append(navigate_command)
@@ -225,7 +227,7 @@ while True:
                                 break
                             else:
                                 #logging.info("MOVE TO FREE PLANET")
-                                [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(planet), game_map, speed=int(hlt.constants.MAX_SPEED), new_ship_positions = new_ship_positions)
+                                [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(planet), game_map, speed=int(hlt.constants.MAX_SPEED), max_corrections=150, new_ship_positions = new_ship_positions)
                                 new_ship_positions.append((x, y))
                                 #logging.info("NAVIGATE COMMAND: {}".format(navigate_command))
                                 if navigate_command:
@@ -239,7 +241,7 @@ while True:
                     # stay near own docking ships and attack enemy if in radius of 40?
                     if closest_enemy_dist < hlt.constants.EARLY_GAME_PROTECTION_RADIUS:
                         # ! COPY FIGHTING BEHAVIOR FROM RUSH MODE FOR THIS SHIP
-                        [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(closest_enemy_ship), game_map, speed=int(hlt.constants.MAX_SPEED), new_ship_positions = new_ship_positions)
+                        [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(closest_enemy_ship), game_map, speed=int(hlt.constants.MAX_SPEED), max_corrections=150, new_ship_positions = new_ship_positions)
                         new_ship_positions.append((x, y))
                         if navigate_command:
                             command_queue.append(navigate_command)
@@ -266,7 +268,7 @@ while True:
                             x = own_x + math.cos(angle) * (hlt.constants.EARLY_GAME_ALLY_RADIUS - own_distance)
                             y = own_y + math.sin(angle) * (hlt.constants.EARLY_GAME_ALLY_RADIUS - own_distance)
                             target_position = hlt.entity.Position(x, y) 
-                            [navigate_command, (x, y)] = ship.navigate(target_position, game_map, speed=int(hlt.constants.MAX_SPEED), new_ship_positions = new_ship_positions)
+                            [navigate_command, (x, y)] = ship.navigate(target_position, game_map, speed=int(hlt.constants.MAX_SPEED), max_corrections=150, new_ship_positions = new_ship_positions)
                             new_ship_positions.append((x, y))
                             if navigate_command:
                                 command_queue.append(navigate_command)
@@ -274,6 +276,7 @@ while True:
                             break
 
     if RUSH_MODE:
+        logging.info("RUSH MODE")
         EARLY_GAME = False
         MID_GAME = False
 
@@ -298,8 +301,9 @@ while True:
                 if ship_to_enemy_distance <= 12:
                     ship_speed = int(ship_to_enemy_distance - 5)
 
-                [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(enemy), game_map, speed=ship_speed, new_ship_positions = new_ship_positions)
+                [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(enemy), game_map, speed=ship_speed, max_corrections=150, new_ship_positions = new_ship_positions)
                 new_ship_positions.append((x, y))
+                logging.info("nav command: {}".format(navigate_command))
                 if navigate_command:
                     command_queue.append(navigate_command)
                     break
