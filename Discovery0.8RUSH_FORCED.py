@@ -3,7 +3,7 @@ import logging
 import math
 import time
 
-game = hlt.Game("Discovery 0.7 E NEW")
+game = hlt.Game("Discovery 0.8 RUSH FORCE")
 logging.info("Starting my Discovery!")
 
 turn = -1
@@ -58,9 +58,12 @@ while True:
 
     logging.info("Current mode: EARLY_GAME = {}, RUSH_MODE = {}, MID_GAME = {}".format(EARLY_GAME, RUSH_MODE, MID_GAME))
     # ! experimental for improving bot early game
-    RUSH_MODE = False
+    RUSH_MODE = True
 
     if RUSH_MODE:
+        EARLY_GAME = False
+        MID_GAME = False
+
         logging.info("RUSH MODE")
         first_ship = my_free_ships[0]
 
@@ -87,10 +90,15 @@ while True:
                     break
 
     elif EARLY_GAME:
+        MID_GAME = False
         logging.info("EARLY GAME")
 
         if turn == 0:
             planet_priority_list = hlt.calculations.get_initial_planet_scores(game_map)
+
+        # get current enemy ship positions
+
+
 
         for ship in game_map.get_me().all_ships():
             if turn != 0:
@@ -153,7 +161,7 @@ while True:
                             break
                         break
 
-    elif MID_GAME:
+    if MID_GAME:
         logging.info("MID GAME")
         for ship in game_map.get_me().all_ships():
             current_time = time.time()

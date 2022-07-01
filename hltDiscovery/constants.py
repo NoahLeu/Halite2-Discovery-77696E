@@ -1,4 +1,7 @@
 #: Max number of units of distance a ship can travel in a turn
+from tkinter.tix import MAX
+
+
 MAX_SPEED = 7
 #: Radius of a ship
 SHIP_RADIUS = 0.5
@@ -26,17 +29,25 @@ SPAWN_RADIUS = 2.0
 
 # CUSTOM CONSTANTS
 
-MAX_TURN_LENGTH = 1.7
+MAX_TURN_LENGTH = 1.9 # limit for calculation is 2 seconds
 
 RUSH_MAP_SIZE_MAX = 200*200
 RUSH_MAX_TURNS = 20
 RUSH_MAX_RANGE = MAX_SPEED * RUSH_MAX_TURNS
 
-EARLY_GAME_MAX_SHIPS = 5
-EARLY_GAME_MAX_PLANETS = 3
+EARLY_GAME_MAX_SHIPS = 4
+EARLY_GAME_MAX_PLANETS = 2
 EARLY_GAME_SAFE_DISTANCE = MAX_SPEED * DOCK_TURNS * WEAPON_RADIUS + DOCK_RADIUS
 EARLY_GAME_MAX_TURNS = 40
+
 UNDOCK_RADIUS = DOCK_RADIUS + MAX_SPEED * DOCK_TURNS + WEAPON_RADIUS 
+
+EARLY_GAME_ENEMY_RADIUS = (DOCK_TURNS + 2) * MAX_SPEED + WEAPON_RADIUS
+EARLY_GAME_PROTECTION_RADIUS = 50
+EARLY_GAME_ALLY_RADIUS = 15
+
+
+
 
 # early game big and small map differences
 # for travelling to planet: if amount travelling more than docking spots + enemies in radius + X then choose next planet

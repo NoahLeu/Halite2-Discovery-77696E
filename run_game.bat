@@ -1,1 +1,1 @@
-halite.exe -d "288 192" "python Discovery0.7Entity.py" "python Discovery0.7E_OLD.py"
+halite.exe -d "288 192" "python Discovery0.8Early.py" "python Discovery0.8Early.py"
