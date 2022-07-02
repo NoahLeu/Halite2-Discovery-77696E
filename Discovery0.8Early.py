@@ -148,16 +148,6 @@ while True:
                 # if ship is allowed to dock go to planet
                 if allow_docking_for_ship[ship.id]:
                     logging.info("SHIP {} ALLOWED TO DOCK".format(ship.id))
-                    #planet_priority_list = planets
-
-                    #closest_planet = None
-                    #closest_planet_distance = float("inf")
-                    #for planet in planet_priority_list:
-                    #    planet=planet[0]
-                    #    planet_distance = ship.calculate_distance_between(planet)
-                    #    if planet_distance < closest_planet_distance:
-                    #        closest_planet_distance = planet_distance
-                    #        closest_planet = planet 
 
                     if my_planets_owned > 0:
                         planet_priority_list = get_planets_by_distance(game_map, ship)
@@ -169,27 +159,22 @@ while True:
                             planet = planet_first_choice
                         #planet = planet[0]
 
+                        # ? potentially spread out if no enemy ships are nearby
+                        # ? potentially spread out if no enemy ships are nearby
+                        # ? potentially spread out if no enemy ships are nearby
+
                         # navigate to planet
-                        # ? potentially spread out if no enemy ships are nearby
-                        # ? potentially spread out if no enemy ships are nearby
-                        # ? potentially spread out if no enemy ships are nearby
-
-                        #planet_enemy_radius = ship.calculate_distance_between(planet)
-                        #if ships_going_to_planet[planet.id] < planet.num_docking_spots + len(hlt.calculations.get_enemy_ships_in_radius(game_map, planet, planet_enemy_radius)) + 2:
-
                         # planet has owner
                         if planet.is_owned():
                             # planet belongs to me and is not full
                             if planet.all_docked_ships()[0].owner == game_map.get_me() and not planet.is_full():
                                 if ship.can_dock(planet):
-                                    logging.info("DOCKING OWNED")
                                     command_queue.append(ship.dock(planet))
                                     new_ship_positions.append((ship.x, ship.y))
                                     ships_going_to_planet[planet.id] += 1
                                     break
                                 else:
-                                    logging.info("MOVE TO OWNED PLANET")
-                                    [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(planet), game_map, speed=int(hlt.constants.MAX_SPEED), max_corrections=120, new_ship_positions = new_ship_positions)
+                                    [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(planet), game_map, speed=int(hlt.constants.MAX_SPEED), max_corrections=hlt.constants.EARLY_GAME_MAX_CORRECTIONS, new_ship_positions = new_ship_positions, early=True)
                                     new_ship_positions.append((x, y))
                                     if navigate_command:
                                         command_queue.append(navigate_command)
@@ -198,16 +183,13 @@ while True:
                                     break
                             # planet belongs to me and is full
                             elif planet.all_docked_ships()[0].owner == game_map.get_me() and planet.is_full():
-                                # move to planet and wait there if ship count <= 3 otherwise continue
                                 if len(my_ships) > 3:
                                     continue
 
                                 if ship.can_dock(planet):
-                                    #logging.info("WAITING FOR ACTION")
                                     break
                                 else:
-                                    #logging.info("MOVE TO OWNED PLANET")
-                                    [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(planet), game_map, speed=int(hlt.constants.MAX_SPEED), max_corrections=120, new_ship_positions = new_ship_positions)
+                                    [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(planet), game_map, speed=int(hlt.constants.MAX_SPEED), max_corrections=hlt.constants.EARLY_GAME_MAX_CORRECTIONS, new_ship_positions = new_ship_positions, early=True)
                                     new_ship_positions.append((x, y))
                                     if navigate_command:
                                         command_queue.append(navigate_command)
@@ -218,22 +200,23 @@ while True:
                                 # ? potentially spread out if no enemy ships are nearby
                                 # ? potentially spread out if no enemy ships are nearby
                                 # ? potentially spread out if no enemy ships are nearby
-                            # planet belongs to enemy
+                            # planet belongs to enemy -> take next best planet
                             elif planet.all_docked_ships()[0].owner != game_map.get_me():
-                                # take next best planet
                                 continue
                         # planet has no owner
                         else:
                             if my_planets_owned > 0 and len(my_ships) <= 3:
                                 continue
                             if ship.can_dock(planet):
-                                logging.info("docking at: {}".format(planet.id))
                                 command_queue.append(ship.dock(planet))
                                 new_ship_positions.append((ship.x, ship.y))
                                 break
                             else:
                                 logging.info("MOVE TO FREE PLANET")
-                                [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(planet), game_map, speed=int(hlt.constants.MAX_SPEED), max_corrections=120, new_ship_positions = new_ship_positions)
+                                if turn == 0 and i == 1:
+                                    [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(planet), game_map, speed=int(hlt.constants.MAX_SPEED - 2), max_corrections=hlt.constants.EARLY_GAME_MAX_CORRECTIONS, new_ship_positions = new_ship_positions, early=True)
+                                else:
+                                    [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(planet), game_map, speed=int(hlt.constants.MAX_SPEED), max_corrections=hlt.constants.EARLY_GAME_MAX_CORRECTIONS, new_ship_positions = new_ship_positions, early=True)
                                 new_ship_positions.append((x, y))
                                 #logging.info("NAVIGATE COMMAND: {}".format(navigate_command))
                                 if navigate_command:
@@ -248,7 +231,7 @@ while True:
                     # stay near own docking ships and attack enemy if in radius of 40?
                     if closest_enemy_dist < hlt.constants.EARLY_GAME_PROTECTION_RADIUS:
                         # ! COPY FIGHTING BEHAVIOR FROM RUSH MODE FOR THIS SHIP
-                        [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(closest_enemy_ship), game_map, speed=int(hlt.constants.MAX_SPEED), max_corrections=120, new_ship_positions = new_ship_positions)
+                        [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(closest_enemy_ship), game_map, speed=int(hlt.constants.MAX_SPEED), max_corrections=hlt.constants.EARLY_GAME_MAX_CORRECTIONS, new_ship_positions = new_ship_positions, early=True)
                         new_ship_positions.append((x, y))
                         if navigate_command:
                             command_queue.append(navigate_command)
@@ -275,7 +258,7 @@ while True:
                             x = own_x + math.cos(angle) * (hlt.constants.EARLY_GAME_ALLY_RADIUS - own_distance)
                             y = own_y + math.sin(angle) * (hlt.constants.EARLY_GAME_ALLY_RADIUS - own_distance)
                             target_position = hlt.entity.Position(x, y) 
-                            [navigate_command, (x, y)] = ship.navigate(target_position, game_map, speed=int(hlt.constants.MAX_SPEED), max_corrections=120, new_ship_positions = new_ship_positions)
+                            [navigate_command, (x, y)] = ship.navigate(target_position, game_map, speed=int(hlt.constants.MAX_SPEED), max_corrections=hlt.constants.EARLY_GAME_MAX_CORRECTIONS, new_ship_positions = new_ship_positions, early=True)
                             new_ship_positions.append((x, y))
                             if navigate_command:
                                 command_queue.append(navigate_command)
@@ -309,7 +292,7 @@ while True:
                 if ship_to_enemy_distance <= 12:
                     ship_speed = int(ship_to_enemy_distance - 5)
 
-                [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(enemy), game_map, speed=ship_speed, max_corrections=120, new_ship_positions = new_ship_positions)
+                [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(enemy), game_map, speed=ship_speed, max_corrections=hlt.constants.EARLY_GAME_MAX_CORRECTIONS, new_ship_positions = new_ship_positions, early=True)
                 new_ship_positions.append((x, y))
                 logging.info("nav command: {}".format(navigate_command))
                 if navigate_command:

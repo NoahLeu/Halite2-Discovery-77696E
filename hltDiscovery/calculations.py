@@ -78,7 +78,7 @@ def get_initial_planet_scores(game_map):
 
         # score is best if minimal
         # dockingspots best if high, ownAverageDistanceToPlanet best if low, numberOfPlanetsInRadius best if high, distanceToCenter best if low
-        evaluation_score =  2.8 * (ownAverageDistanceToPlanet/1) + 2 * (distanceToCenter/1) - 1 * (numberOfPlanetsInRadius) - 1.7 * (dockingSpots) 
+        evaluation_score =  2.8 * (ownAverageDistanceToPlanet/1) + 1.5 * (distanceToCenter/1) - 1 * (numberOfPlanetsInRadius) - 1.8 * (dockingSpots) 
 
         planet_scores.append([planet, evaluation_score])
 
