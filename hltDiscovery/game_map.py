@@ -172,6 +172,38 @@ class Map:
         return obstacles
 
 
+    def obstacles_between_custom(self, ship, target, ship_positions, ignore=()):
+        """
+        Check whether there is a straight-line path to the given point, without own ships in between.
+
+        :param entity.Ship ship: Source entity
+        :param entity.Entity target: Target entity
+        :param list[tuple[int, int]] ship_positions: List of ship positions
+        :param entity.Entity ignore: Which entity type to ignore
+        :return: The list of obstacles between the ship and target
+        :rtype: list[entity.Entity]
+        """
+        obstacles = []
+
+        ship_pos = [entity.Position(ship_position[0], ship_position[1]) for ship_position in ship_positions]
+
+        for own_ship in ship_pos:
+            if own_ship.x == ship.x and own_ship.y == ship.y:
+                continue
+            if collision.intersect_segment_circle(ship, target, own_ship, fudge=ship.radius * 2):
+                obstacles.append(own_ship)
+
+        entities = ([] if issubclass(entity.Planet, ignore) else self.all_planets()) \
+            + ([] if issubclass(entity.Ship, ignore) else self._all_ships())
+        for foreign_entity in entities:
+            if foreign_entity == ship or foreign_entity == target:
+                continue
+            if collision.intersect_segment_circle(ship, target, foreign_entity, fudge=ship.radius + 0.1):
+                obstacles.append(foreign_entity)
+
+        return obstacles
+
+
     def obstacles_between_own_collisions(self, ship, target, ship_positions, ignore=()):
         """
         Check whether there is a straight-line path to the given point, without own ships in between.
@@ -194,6 +226,7 @@ class Map:
                 obstacles.append(own_ship)
 
         return obstacles
+
 
 class Player:
     """

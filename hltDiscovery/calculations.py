@@ -1,4 +1,4 @@
-import hltDiscovery
+import hltDiscovery as hlt
 import logging
 
 def get_distance_between_pos_entity(position, entity):
@@ -39,10 +39,17 @@ def get_enemy_ships_in_radius(game_map, entity, radius):
             enemyShipList.append(ship)
     return enemyShipList
 
+def get_ally_ships_in_radius(game_map, entity, radius):
+    ally_ship_list = []
+    for ship in game_map.get_me().free_ships():
+        if entity.calculate_distance_between(ship) <= radius:
+            ally_ship_list.append(ship)
+    return ally_ship_list
 
 def get_initial_planet_scores(game_map):
+    logging.info("my player id" + str(game_map.get_me().id))
     # größe (docking spots)
-    # (entfernung zu den anderem Spieler)
+    # (entfernung zu dem anderen Spieler)
     # entfernung zu sich selbst
     # entfernung zur durschnittsposition unserer Schiffe
     # entfernung zu anderen planeten bzw. anzahl von planeten in radius X um PLanet
@@ -58,7 +65,7 @@ def get_initial_planet_scores(game_map):
         dockingSpots = planet.num_docking_spots
 
         enemyShipsByDistance = get_enemy_ships_by_distance(game_map, planet)
-        distanceToClosetEnemy = planet.calculate_distance_between(enemyShipsByDistance[0])
+        # distanceToClosetEnemy = planet.calculate_distance_between(enemyShipsByDistance[0])
 
         ownAverageDistanceToPlanet = 0
         for ship in game_map.get_me().all_ships():
@@ -69,71 +76,48 @@ def get_initial_planet_scores(game_map):
 
         numberOfPlanetsInRadius = len([planetInRadius for planetInRadius in game_map.all_planets() if planet.calculate_distance_between(planetInRadius) < MAX_RANGE_PLANETS_THRESHOLD - planet.radius - planetInRadius.radius])
 
-        # CHANGE PRIOS HERE
-        # dockingSpots: [2, 20]
-        # ownAverageDistanceToPlanet: [0, 200]
-        # numberOfPlanetsInRadius: [0, 10]
-        # distanceToCenter: [0, 250]
+        max_map_distance = max(game_map.width, game_map.height)
 
-        # score smaller = better
+        # normalize values
+        dockingSpots = (dockingSpots - 2) / (20 - 2)
+        ownAverageDistanceToPlanet = ownAverageDistanceToPlanet / max_map_distance 
+        numberOfPlanetsInRadius = numberOfPlanetsInRadius / len(game_map.all_planets())
+        distanceToCenter = distanceToCenter / max_map_distance
 
-        # score = 1200/dockingSpots + ownAverageDistanceToPlanet/.5 + 400/numberOfPlanetsInRadius + distanceToCenter/3
+        # score is best if score is minimal
+        # dockingspots best if high, ownAverageDistanceToPlanet best if low, numberOfPlanetsInRadius best if high, distanceToCenter best if low
+        evaluation_score =  2.5 * (ownAverageDistanceToPlanet/1) + 2 * (distanceToCenter/1) - 1 * (numberOfPlanetsInRadius) - 1.5 * (dockingSpots) 
 
-        dockingSpots = 1/dockingSpots
-        ownAverageDistanceToPlanet = 1/ownAverageDistanceToPlanet / 100
-        numberOfPlanetsInRadius = 1/numberOfPlanetsInRadius / 4
-        distanceToCenter = 1/distanceToCenter / 100
+        # score = (1/dockingSpots) + (ownAverageDistanceToPlanet/1) + (1/numberOfPlanetsInRadius) + (distanceToCenter/1)
+        #score = dockingSpots + ownAverageDistanceToPlanet + numberOfPlanetsInRadius + distanceToCenter
 
-        score = dockingSpots + ownAverageDistanceToPlanet + numberOfPlanetsInRadius + distanceToCenter
-
-        planet_scores.append([planet, score])
+        planet_scores.append([planet, evaluation_score])
 
     # sort planet_scores so that the lowest score is first in the list sorted by second element
     planet_scores.sort(key=lambda x: x[1])
 
-    logging.info("planet_scores: " + str(planet_scores))
+    logging.info("my best planet: " + str(planet_scores[0][0].id))
+
+    planet_scores = [planet[0] for planet in planet_scores]
 
     return planet_scores
 
-def get_initial_planet_scores2(game_map):
-    # größe (docking spots)
-    # (entfernung zu den anderem Spieler)
-    # entfernung zu sich selbst
-    # entfernung zur durschnittsposition unserer Schiffe
-    # entfernung zu anderen planeten bzw. anzahl von planeten in radius X um PLanet
-    # entfernung zur mitte des spielfeldes (näher zur mitte = besser)
+def rush_on_game_start(game_map):
+    if len(game_map.all_players()) > 2:
+       return False
 
-    # score niedriger = besser
+    myShips = game_map.get_me().all_ships()
+    enemyShips = game_map.all_enemy_ships()
+    closestEnemyShipDistance = float('inf')
+    for enemyShip in enemyShips:
+        for myShip in myShips:
+            distance = myShip.calculate_distance_between(enemyShip)
+            if distance < closestEnemyShipDistance:
+                closestEnemyShipDistance = distance
 
-    MAX_RANGE_PLANETS_THRESHOLD = 40
+    if closestEnemyShipDistance < hlt.constants.RUSH_MAX_RANGE or \
+        game_map.size < hlt.constants.RUSH_MAP_SIZE_MAX:
+        return True
 
-    planet_scores = []
-
-    for planet in game_map.all_planets():
-        dockingSpots = planet.num_docking_spots
-
-        enemyShipsByDistance = get_enemy_ships_by_distance(game_map, planet)
-        distanceToClosetEnemy = planet.calculate_distance_between(enemyShipsByDistance[0])
-
-        ownAverageDistanceToPlanet = 0
-        for ship in game_map.get_me().all_ships():
-            ownAverageDistanceToPlanet += planet.calculate_distance_between(ship) - planet.radius
-        ownAverageDistanceToPlanet = ownAverageDistanceToPlanet / len(game_map.get_me().all_ships())
-
-        distanceToCenter = get_distance_between_pos_entity([0,0], planet) - planet.radius
-
-        numberOfPlanetsInRadius = len([planetInRadius for planetInRadius in game_map.all_planets() if planet.calculate_distance_between(planetInRadius) < MAX_RANGE_PLANETS_THRESHOLD - planet.radius - planetInRadius.radius])
-
-        # CHANGE PRIOS HERE
-        # dockingSpots: [2, 20]
-        # ownAverageDistanceToPlanet: [0, 200]
-        # numberOfPlanetsInRadius: [0, 10]
-        # distanceToCenter: [0, 250]
-
-        score = 400/dockingSpots + ownAverageDistanceToPlanet/1 + 400/numberOfPlanetsInRadius + distanceToCenter/1.8
-
-        planet_scores.append([planet, score])
-
-    planet_scores.sort(key=lambda x: x[1])
-
-    return planet_scores
+    if game_map.size < hlt.constants.RUSH_MAP_SIZE_MAX:
+        return True

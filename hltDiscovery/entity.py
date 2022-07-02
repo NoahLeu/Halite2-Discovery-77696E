@@ -286,16 +286,81 @@ class Ship(Entity):
         current_target_dx = math.cos(math.radians(angle)) * distance
         current_target_dy = math.sin(math.radians(angle)) * distance
 
-        if avoid_obstacles and game_map.obstacles_between(self, target, ignore):
+        # ! PROBLEM:
+        # if planet -> go around
+        # if ship -> go around
+        # if ship and not possible to go around without losing a lot of turns -> slow down
+
+        obstacles = game_map.obstacles_between_custom(self, target, new_ship_positions, ignore)
+        if avoid_obstacles and len(obstacles) != 0:
+            closest_obstacle_to_target = obstacles[0]
+            closest_dist = self.calculate_distance_between(closest_obstacle_to_target)
+            for obstacle in obstacles:
+                if self.calculate_distance_between(obstacle) < closest_dist:
+                    closest_obstacle_to_target = obstacle
+                    closest_dist = self.calculate_distance_between(obstacle)
+
+            # redirect ship to best angle (+ or - angular_step) depending on new distance to target
+            current_correction = 0
+
             new_target_dx = math.cos(math.radians(angle + angular_step)) * distance
             new_target_dy = math.sin(math.radians(angle + angular_step)) * distance
             new_target = Position(self.x + new_target_dx, self.y + new_target_dy)
+
+            speed = speed if (distance >= speed) else distance
+            new_x = self.x + math.cos(math.radians(angle + angular_step)) * speed
+            new_y = self.y + math.sin(math.radians(angle + angular_step)) * speed
+
+            current_distance = self.calculate_distance_between(target)
+
+            new_distance = (new_x - target.x) ** 2 + (new_y - target.y) ** 2
+            
+            if new_distance <= current_distance:
+                current_correction = 1
+            else:
+                current_correction = 0
+
+            if current_correction == 0:
+                new_target_dx = math.cos(math.radians(angle + angular_step)) * distance
+                new_target_dy = math.sin(math.radians(angle + angular_step)) * distance
+                new_target = Position(self.x + new_target_dx, self.y + new_target_dy)
+
+            return self.navigate(new_target, game_map, speed, True, max_corrections - 1, angular_step, new_ship_positions = new_ship_positions)
+
+        # dont crash into target
+        speed = speed if (distance >= speed) else distance
+
+        current_target_dx = math.cos(math.radians(angle)) * speed
+        current_target_dy = math.sin(math.radians(angle)) * speed
+
+        return [self.thrust(speed, angle), (self.x + current_target_dx, self.y + current_target_dy)]
+
+    def navigate_BACKUP(self, target, game_map, speed, avoid_obstacles=True, max_corrections=90, angular_step=1,
+                 ignore_ships=False, ignore_planets=False, new_ship_positions=[]):
+        if max_corrections <= 0:
+            return [None, (self.x, self.y)]
+        distance = self.calculate_distance_between(target)
+        angle = self.calculate_angle_between(target)
+        ignore = () if not (ignore_ships or ignore_planets) \
+            else Ship if (ignore_ships and not ignore_planets) \
+            else Planet if (ignore_planets and not ignore_ships) \
+            else Entity
+
+        current_target_dx = math.cos(math.radians(angle)) * distance
+        current_target_dy = math.sin(math.radians(angle)) * distance
+
+        if avoid_obstacles and game_map.obstacles_between(self, target, ignore):
+            new_target_dx = math.cos(math.radians(angle - angular_step)) * distance
+            new_target_dy = math.sin(math.radians(angle - angular_step)) * distance
+            new_target = Position(self.x + new_target_dx, self.y + new_target_dy)
+            logging.info("planet redirect")
             return self.navigate(new_target, game_map, speed, True, max_corrections - 1, angular_step, new_ship_positions = new_ship_positions)
 
         if avoid_obstacles and len(game_map.obstacles_between_own_collisions(self, target, new_ship_positions, ignore)) != 0:
-            new_target_dx = math.cos(math.radians(angle + angular_step)) * distance
-            new_target_dy = math.sin(math.radians(angle + angular_step)) * distance
+            new_target_dx = math.cos(math.radians(angle - angular_step)) * distance
+            new_target_dy = math.sin(math.radians(angle - angular_step)) * distance
             new_target = Position(self.x + new_target_dx, self.y + new_target_dy)
+            logging.info("own ship redirect")
             return self.navigate(new_target, game_map, speed, True, max_corrections - 1, angular_step, new_ship_positions = new_ship_positions)
 
         speed = speed if (distance >= speed) else distance

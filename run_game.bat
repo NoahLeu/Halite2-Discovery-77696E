@@ -1,1 +1,1 @@
-halite.exe -d "288 192" "python Discovery0.8Early.py" "python Discovery0.8RUSH_FORCED.py"
+halite.exe -d "360 192" "python Discovery0.8Early.py" "python Discovery0.8Early.py"
