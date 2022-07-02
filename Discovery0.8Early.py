@@ -140,9 +140,9 @@ while True:
             for ship in my_ships:
                 i += 1
                 if ship.docking_status != ship.DockingStatus.UNDOCKED:
+                    new_ship_positions.append((ship.x, ship.y))
                     if not allow_docking_for_ship[ship.id]:
                         command_queue.append(ship.undock())
-                        new_ship_positions.append((ship.x, ship.y))
                     continue
                     
                 # if ship is allowed to dock go to planet
