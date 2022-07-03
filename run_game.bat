@@ -1,1 +1,1 @@
-halite.exe -d "360 192" "python Discovery0.9.py" "python Discovery0.9.py" -s "705946709"
+halite.exe -d "288 192" "python Discovery0.9.py" "python Discovery0.9.py"

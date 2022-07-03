@@ -29,6 +29,7 @@ SPAWN_RADIUS = 2.0
 
 # CUSTOM CONSTANTS
 
+SMALL_MAP = 300 * 200
 MAX_TURN_LENGTH = 1.9 # limit for calculation is 2 seconds
 
 RUSH_MAP_SIZE_MAX = 200*200

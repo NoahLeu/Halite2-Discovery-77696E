@@ -1,9 +1,9 @@
 
-import hltDiscovery
+import hlt
 import logging
 import random as rnd
 
-game = hltDiscovery.Game("Settle then Battle v2")
+game = hlt.Game("Settle then Battle v2")
 logging.info("Starting my FondalmJ bot!")
 
 '''
@@ -19,7 +19,7 @@ Strategy:
 def nearest_planet(ship):
     entities_by_distance = game_map.nearby_entities_by_distance(ship)
     for distance in sorted(entities_by_distance):
-        planet = next((nearest_entity for nearest_entity in entities_by_distance[distance] if isinstance(nearest_entity, hltDiscovery.entity.Planet)), None)
+        planet = next((nearest_entity for nearest_entity in entities_by_distance[distance] if isinstance(nearest_entity, hlt.entity.Planet)), None)
         #make sure the planet exists, can be docked to and still has rescources
         if planet and (not planet.is_owned() or planet.owner == me) and not planet.is_full() and planet.remaining_resources > 0:
             #make sure the planet doesnt have too many ships assigned to it
@@ -31,12 +31,12 @@ def nearest_enemy(ship):
     entities_by_distance = game_map.nearby_entities_by_distance(ship)
     for distance in sorted(entities_by_distance):
         next_enemy = next((nearest_entity for nearest_entity in entities_by_distance[distance]), None)
-        if isinstance(next_enemy, hltDiscovery.entity.Ship) and next_enemy.owner != me:
+        if isinstance(next_enemy, hlt.entity.Ship) and next_enemy.owner != me:
             return next_enemy
 
 #returns a command, making the ship navigate to the target
 def generate_navigate_command(ship, target):
-    return ship.navigate(ship.closest_point_to(target), game_map, speed=int(hltDiscovery.constants.MAX_SPEED))
+    return ship.navigate(ship.closest_point_to(target), game_map, speed=int(hlt.constants.MAX_SPEED))
 
 while True:
     game_map = game.update_map()

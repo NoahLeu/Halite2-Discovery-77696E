@@ -1,0 +1,1 @@
+halite.exe -d "460 392" "python Discovery0.9.py" "python Settle_then_Battle_v2.py" -s "2326715960"

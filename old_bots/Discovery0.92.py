@@ -5,7 +5,7 @@ import time
 
 from hltDiscovery.calculations import get_planets_by_distance
 
-game = hlt.Game("Discovery 0.9 P")
+game = hlt.Game("Discovery 0.9 bad")
 logging.info("Starting my Discovery!")
 logging.info("Calculating win % ...")
 logging.info("Finished calculating win %! Starting game!")
@@ -35,7 +35,7 @@ while True:
     my_planets_owned = len(my_planets)
     
     if turn == 0:
-        planet_priority_list = hlt.calculations.get_initial_planet_scores(game_map)
+        planet_priority_list = hlt.calculations.get_initial_planet_scores2(game_map)
 
         far_dist = 0
         far_ship_on_start = game_map.get_me().all_ships()[0]
@@ -75,13 +75,13 @@ while True:
 
     logging.info("Turn: " + str(turn))
 
-    
+    '''
     player_id = game_map.get_me().id
     if player_id == 1:
         RUSH_MODE = True
         EARLY_GAME = False
         MID_GAME = False
-    
+    '''
 
     if EARLY_GAME:
         allow_docking_for_ship = {}
