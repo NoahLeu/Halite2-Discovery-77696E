@@ -1,6 +1,5 @@
 import hltDiscovery as hlt
 import logging
-import random
 
 def get_distance_between_pos_entity(position, entity):
     entityX = entity.x
@@ -13,7 +12,6 @@ def get_distance_between_pos_entity(position, entity):
 def get_planets_by_distance(game_map, entity):
     planetList = [[planet, entity.calculate_distance_between(planet)] for planet in game_map.all_planets()]
     planetList.sort(key=lambda x: x[1])
-
     planetList = [planet[0] for planet in planetList]
 
     return planetList
@@ -22,7 +20,6 @@ def get_planets_by_distance(game_map, entity):
 def get_enemy_ships_by_distance(game_map, entity):
     enemyShipList = [[ship, entity.calculate_distance_between(ship)] for ship in game_map.all_enemy_ships()]
     enemyShipList.sort(key=lambda x: x[1])
-
     enemyShipList = [ship[0] for ship in enemyShipList]
 
     return enemyShipList
@@ -49,9 +46,7 @@ def get_ally_ships_in_radius(game_map, entity, radius):
 
 def get_initial_planet_scores(game_map):
     MAX_RANGE_PLANETS_THRESHOLD = 40
-
     map_size = game_map.width * game_map.height
-
     planet_scores = []
 
     for planet in game_map.all_planets():
@@ -85,7 +80,7 @@ def get_initial_planet_scores(game_map):
         if map_size <= hlt.constants.SMALL_MAP:
             evaluation_score =  2.5 * (ownAverageDistanceToPlanet/1) + 2.8 * (distanceToCenter/1) - 1 * (numberOfPlanetsInRadius) - 2 * (dockingSpots)
         else:
-            evaluation_score =  2.5 * (ownAverageDistanceToPlanet/1) + 1 * (distanceToCenter/1) - 1 * (numberOfPlanetsInRadius) - 2.5 * (dockingSpots)
+            evaluation_score =  4 * (ownAverageDistanceToPlanet/1) + 1 * (distanceToCenter/1) - 0.6 * (numberOfPlanetsInRadius) - 3.5 * (dockingSpots)
 
         planet_scores.append([planet, evaluation_score])
 
@@ -96,9 +91,6 @@ def get_initial_planet_scores(game_map):
 
 
 def rush_on_game_start(game_map):
-    if len(game_map.all_players()) > 2:
-       return False
-
     myShips = game_map.get_me().all_ships()
     enemyShips = game_map.all_enemy_ships()
     closestEnemyShipDistance = float('inf')
@@ -110,19 +102,6 @@ def rush_on_game_start(game_map):
 
     if closestEnemyShipDistance < hlt.constants.RUSH_MAX_RANGE or \
         game_map.size < hlt.constants.RUSH_MAP_SIZE_MAX:
-        if rush_roulette():
-            return True
-
-    if game_map.size < hlt.constants.RUSH_MAP_SIZE_MAX:
-        if rush_roulette():
-            return True
-
-    return False
-
-
-def rush_roulette():
-    roulette_spin = random.randint(0, 2)
-    if roulette_spin == 0:
         logging.info("    ___________,")
         logging.info(" \-'       _____|=====+--------------+")
         logging.info("  )   _ __/           | PENG -> RUSH |")
@@ -131,4 +110,15 @@ def rush_roulette():
         logging.info("|   \         ")
         logging.info("`---'")
         return True
+
+    if game_map.size < hlt.constants.RUSH_MAP_SIZE_MAX:
+        logging.info("    ___________,")
+        logging.info(" \-'       _____|=====+--------------+")
+        logging.info("  )   _ __/           | PENG -> RUSH |")
+        logging.info(" / `./_/              |______________|")
+        logging.info("|   |     ")
+        logging.info("|   \         ")
+        logging.info("`---'")
+        return True
+
     return False

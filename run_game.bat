@@ -1,1 +1,1 @@
-halite.exe -d "288 192" "python Discovery_77696E.py" "python Discovery_77696E.py"
+halite.exe -d "360 192" "python Discovery_77696E.py" "python enemy_bots/FondalmAI.py"

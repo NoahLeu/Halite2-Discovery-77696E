@@ -311,15 +311,18 @@ class Ship(Entity):
                     current_dist_to_obstacle = self.calculate_distance_between(obstacle_old_pos)
                     obstacle_new_pos = Position(new_ship_positions[closest_obstacle_index][1][0], new_ship_positions[closest_obstacle_index][1][1])
                     
-                    obst_angle = self.calculate_angle_between(obstacle_new_pos)
+                    #obst_angle = self.calculate_angle_between(obstacle_new_pos)
+                    #new_self_x = self.x + math.cos(math.radians(obst_angle)) * speed
+                    #new_self_y = self.y + math.sin(math.radians(obst_angle)) * speed
 
-                    new_self_x = self.x + math.cos(math.radians(obst_angle)) * speed
-                    new_self_y = self.y + math.sin(math.radians(obst_angle)) * speed
+                    new_self_x = self.x + math.cos(math.radians(angle)) * speed
+                    new_self_y = self.y + math.sin(math.radians(angle)) * speed
                     my_new_pos = Position(new_self_x, new_self_y)
 
                     dist_new_to_obst = ((my_new_pos.x - obstacle_new_pos.x)**2 + (my_new_pos.y - obstacle_new_pos.y)**2)**0.5
                     if current_dist_to_obstacle <= constants.SHIP_RADIUS * 2 + 0.1 or dist_new_to_obst <= constants.SHIP_RADIUS * 2 + 0.1:
-                        speed -= constants.SHIP_RADIUS * 2
+                        logging.info("slow down collision")
+                        speed -= constants.SHIP_RADIUS * 2 + 1
                     
                     if speed < 0:
                         speed = 0
