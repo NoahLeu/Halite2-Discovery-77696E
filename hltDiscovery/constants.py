@@ -48,7 +48,7 @@ EARLY_GAME_ALLY_RADIUS = 15
 
 MID_GAME_ENEMY_RADIUS = DOCK_TURNS * MAX_SPEED + WEAPON_RADIUS
 
-EARLY_GAME_MAX_CORRECTIONS = 120
+EARLY_GAME_MAX_CORRECTIONS = 160
 
 # early game big and small map differences
 # for travelling to planet: if amount travelling more than docking spots + enemies in radius + X then choose next planet

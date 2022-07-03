@@ -1,3 +1,4 @@
+from http.client import INSUFFICIENT_STORAGE
 import logging
 import abc
 import math
@@ -306,7 +307,9 @@ class Ship(Entity):
         current_target_dy = math.sin(math.radians(angle)) * distance
 
         if avoid_obstacles:
-            obstacles = game_map.obstacles_between_custom(self, target, new_ship_positions, ignore)
+            new_positions = [(x,y) for (_,_), (x,y) in new_ship_positions]
+            obstacles = game_map.obstacles_between_custom(self, target, new_positions, ignore)
+            
             if len(obstacles) != 0:
                 closest_obstacle_to_target = obstacles[0]
                 closest_dist = self.calculate_distance_between(closest_obstacle_to_target)
@@ -315,16 +318,110 @@ class Ship(Entity):
                         closest_obstacle_to_target = obstacle
                         closest_dist = self.calculate_distance_between(obstacle)
 
-                # redirect ship to best angle (+ or - angular_step) depending on new distance to target
-                # current_correction = 0
+                logging.info("own pos: {}".format((self.x, self.y)))
+                logging.info("obstacle pos: {}".format((closest_obstacle_to_target.x, closest_obstacle_to_target.y)))
+                
+                speed = speed if (distance >= speed) else distance
+                if isinstance(closest_obstacle_to_target, Ship) and len(new_positions) > 0:
+                    logging.info("dodging own ship")
+                    closest_obstacle_index = 0
+                    logging.info(new_ship_positions)
+                    for i in range(len(new_positions)):
+                        if new_positions[i][0] == closest_obstacle_to_target.x and new_positions[i][1] == closest_obstacle_to_target.y:
+                            closest_obstacle_index = i
+                            break
+                    logging.info(new_ship_positions[closest_obstacle_index])
+                    obstacle_old_pos = Position(new_ship_positions[closest_obstacle_index][0][0], new_ship_positions[closest_obstacle_index][0][1])
+                    current_dist_to_obstacle = self.calculate_distance_between(obstacle_old_pos)
+                    obstacle_new_pos = Position(new_ship_positions[closest_obstacle_index][1][0], new_ship_positions[closest_obstacle_index][1][1])
+                    new_dist_to_obstacle = self.calculate_distance_between(obstacle_new_pos)
 
+                    logging.info("current dist: {}".format(current_dist_to_obstacle))
+                    if current_dist_to_obstacle <= constants.SHIP_RADIUS * 2 + 0.1 or new_dist_to_obstacle <= constants.SHIP_RADIUS * 2 + 0.1:
+                        logging.info("Obstacle DANGER")
+                        speed -= constants.SHIP_RADIUS * 2
+                    
+                    if speed < 0:
+                        speed = 0
+                
                 new_target_dx = math.cos(math.radians(angle + angular_step)) * distance
                 new_target_dy = math.sin(math.radians(angle + angular_step)) * distance
                 new_target = Position(self.x + new_target_dx, self.y + new_target_dy)
+
+                new_x = self.x + math.cos(math.radians(angle + angular_step)) * speed
+                new_y = self.y + math.sin(math.radians(angle + angular_step)) * speed
+
+                current_distance = self.calculate_distance_between(target)
+
+                new_distance = (new_x - target.x) ** 2 + (new_y - target.y) ** 2
                 
-                speed = speed if (distance >= speed) else distance
-                if early and max_corrections <= 50:
-                    speed = 1
+                if new_distance <= current_distance:
+                    current_correction = 1
+                else:
+                    current_correction = 0
+
+                if current_correction == 0:
+                    new_target_dx = math.cos(math.radians(angle - angular_step)) * distance
+                    new_target_dy = math.sin(math.radians(angle - angular_step)) * distance
+                    new_target = Position(self.x + new_target_dx, self.y + new_target_dy)
+                
+                return self.navigate(new_target, game_map, speed, True, max_corrections - 1, angular_step, new_ship_positions = new_ship_positions)
+
+        # dont crash into target
+        speed = speed if (distance >= speed) else distance
+
+        current_target_dx = math.cos(math.radians(angle)) * speed
+        current_target_dy = math.sin(math.radians(angle)) * speed
+
+        return [self.thrust(speed, angle), (self.x + current_target_dx, self.y + current_target_dy)]
+
+    def navigate_B2(self, target, game_map, speed, avoid_obstacles=True, max_corrections=90, angular_step=1,
+                 ignore_ships=False, ignore_planets=False, new_ship_positions=[], early=False):
+        if max_corrections <= 0:
+            '''
+            if speed > 0:
+                speed -= 1
+                angle = self.calculate_angle_between(target)
+                new_target_dx = math.cos(math.radians(angle + angular_step)) * speed
+                new_target_dy = math.sin(math.radians(angle + angular_step)) * speed
+                new_target = Position(self.x + new_target_dx, self.y + new_target_dy)
+
+                return self.navigate(new_target, game_map, speed, True, max_corrections + 3, angular_step, new_ship_positions = new_ship_positions)
+
+            else: 
+                speed = 1
+                angle = (self.calculate_angle_between(target) + 180) % 360
+                current_target_dx = math.cos(math.radians(angle)) * speed
+                current_target_dy = math.sin(math.radians(angle)) * speed
+                return [self.thrust(speed, angle), (self.x + current_target_dx, self.y + current_target_dy)]
+            '''
+            
+            return [None, (self.x, self.y)]
+
+        distance = self.calculate_distance_between(target)
+        angle = self.calculate_angle_between(target)
+        ignore = () if not (ignore_ships or ignore_planets) \
+            else Ship if (ignore_ships and not ignore_planets) \
+            else Planet if (ignore_planets and not ignore_ships) \
+            else Entity
+
+        current_target_dx = math.cos(math.radians(angle)) * distance
+        current_target_dy = math.sin(math.radians(angle)) * distance
+
+        if avoid_obstacles:
+            obstacles = game_map.obstacles_between_custom(self, target, new_ship_positions, ignore)
+            if len(obstacles) != 0:
+
+                closest_obstacle_to_target = obstacles[0]
+                closest_dist = self.calculate_distance_between(closest_obstacle_to_target)
+                for obstacle in obstacles:
+                    if self.calculate_distance_between(obstacle) < closest_dist:
+                        closest_obstacle_to_target = obstacle
+                        closest_dist = self.calculate_distance_between(obstacle)
+                
+                new_target_dx = math.cos(math.radians(angle + angular_step)) * distance
+                new_target_dy = math.sin(math.radians(angle + angular_step)) * distance
+                new_target = Position(self.x + new_target_dx, self.y + new_target_dy)
 
                 new_x = self.x + math.cos(math.radians(angle + angular_step)) * speed
                 new_y = self.y + math.sin(math.radians(angle + angular_step)) * speed
@@ -343,6 +440,8 @@ class Ship(Entity):
                     new_target_dy = math.sin(math.radians(angle + angular_step)) * distance
                     new_target = Position(self.x + new_target_dx, self.y + new_target_dy)
                 
+                speed = speed if (distance >= speed) else distance
+                logging.info("new speed: " + str(speed))
                 return self.navigate(new_target, game_map, speed, True, max_corrections - 1, angular_step, new_ship_positions = new_ship_positions)
 
         # dont crash into target
