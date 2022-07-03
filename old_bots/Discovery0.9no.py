@@ -2,14 +2,21 @@ import hltDiscovery as hlt
 import logging
 import math
 import time
+import base64
 
 from hltDiscovery.calculations import get_planets_by_distance
 
-game = hlt.Game("Discovery 0.9 P")
+def decode_log(log_string):
+    base64_bytes = log_string.encode('ascii')
+    message_bytes = base64.b64decode(base64_bytes)
+    log_msg = message_bytes.decode('ascii')
+    return log_msg
+
+game = hlt.Game("Discovery 0.9 no")
 logging.info("Starting my Discovery!")
-logging.info("Calculating win % ...")
-logging.info("Finished calculating win %! Starting game!")
-logging.info("Calculating win probability of 99.99999%")
+logging.info(decode_log("Q2FsY3VsYXRpbmcgd2luICUgLi4u"))
+logging.info(decode_log("RmluaXNoZWQgY2FsY3VsYXRpbmcgd2luICUhIFN0YXJ0aW5nIGdhbWUh"))
+logging.info(decode_log("Q2FsY3VsYXRpbmcgd2luIHByb2JhYmlsaXR5IG9mIDk5Ljk5OTk5JSA7KQ=="))
 
 turn = -1
 
@@ -74,15 +81,7 @@ while True:
         MID_GAME = True
 
     logging.info("Turn: " + str(turn))
-
     
-    player_id = game_map.get_me().id
-    if player_id == 1:
-        RUSH_MODE = True
-        EARLY_GAME = False
-        MID_GAME = False
-    
-
     if EARLY_GAME:
         allow_docking_for_ship = {}
         ships_in_critical_zone = set()
@@ -228,11 +227,9 @@ while True:
                 
                 # this ship is the only one to protect own ships
                 else:
-                    logging.info("protecting own ships")
                     # stay near own docking ships and attack enemy if in radius
                     if closest_enemy_dist < hlt.constants.EARLY_GAME_PROTECTION_RADIUS:
                         # currently: kamikaze into enemy ship
-                        # ! COPY FIGHTING BEHAVIOR FROM RUSH MODE FOR THIS SHIP
                         current_x, current_y = ship.x, ship.y
                         [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(closest_enemy_ship), game_map, speed=int(hlt.constants.MAX_SPEED), max_corrections=hlt.constants.EARLY_GAME_MAX_CORRECTIONS, new_ship_positions = new_ship_positions, early=True)
                         new_ship_positions.append(((current_x, current_y), (x, y)))
@@ -272,12 +269,10 @@ while True:
                 i += 1
 
     if RUSH_MODE:
-        logging.info("RUSH MODE")
         EARLY_GAME = False
         MID_GAME = False
 
-        # fight will all available ships
-        #logging.info("RUSH MODE")
+        # fight with all available ships
         first_ship = game_map.get_me().all_ships()[0]
 
         ship_positions = [(ship.x, ship.y) for ship in game_map.get_me().all_ships()]
@@ -298,8 +293,6 @@ while True:
                 command_queue.append(ship.undock())
                 continue
 
-            #enemy_by_distance = hlt.calculations.get_enemy_ships_by_distance(game_map, first_ship)
-            #for enemy in enemy_by_distance:
             enemy = closest_enemy
 
             ship_to_enemy_distance = ship.calculate_distance_between(enemy)
@@ -315,16 +308,13 @@ while True:
             current_x, current_y = ship.x, ship.y
             [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(enemy), game_map, speed=ship_speed, max_corrections=hlt.constants.EARLY_GAME_MAX_CORRECTIONS, new_ship_positions = new_ship_positions, early=True)
             new_ship_positions.append(((current_x, current_y), (x, y)))
-            logging.info("nav command: {}".format(navigate_command))
             if navigate_command:
                 command_queue.append(navigate_command)
                 
     elif MID_GAME:
-        #logging.info("MID GAME")
         for ship in game_map.get_me().all_ships():
             current_time = time.time()
             if current_time - turn_start > hlt.constants.MAX_TURN_LENGTH:
-                logging.info("Turn time exceeded")
                 break
 
             if ship.docking_status != ship.DockingStatus.UNDOCKED:
@@ -333,13 +323,6 @@ while True:
                     new_ship_positions.append(((ship.x, ship.y), (ship.x, ship.y)))
                     continue
 
-                #enemy_ship_close_count = len(hlt.calculations.get_enemy_ships_in_radius(game_map, planet, hlt.constants.MID_GAME_ENEMY_RADIUS))
-                #ally_ship_close_count = len(hlt.calculations.get_ally_ships_in_radius(game_map, planet, hlt.constants.MID_GAME_ENEMY_RADIUS))
-
-                #if enemy_ship_close_count - ally_ship_close_count > 0:
-                #    command_queue.append(ship.undock())
-                #    new_ship_positions.append((ship.x, ship.y))
-
                 continue
                 
             entities_by_distance = game_map.nearby_enemies_and_planets_by_distance(ship)
@@ -347,7 +330,6 @@ while True:
             for entity in entities_by_distance:
                 current_time = time.time()
                 if current_time - turn_start > hlt.constants.MAX_TURN_LENGTH:
-                    logging.info("Turn time exceeded")
                     break
                 if isinstance(entity, hlt.entity.Planet):
                     planet = entity

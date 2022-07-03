@@ -28,13 +28,13 @@ SPAWN_RADIUS = 2.0
 
 
 # CUSTOM CONSTANTS
-
 SMALL_MAP = 300 * 200
 MAX_TURN_LENGTH = 1.9 # limit for calculation is 2 seconds
 
 RUSH_MAP_SIZE_MAX = 200*200
 RUSH_MAX_TURNS = 20
 RUSH_MAX_RANGE = MAX_SPEED * RUSH_MAX_TURNS
+RUSH_ROULETTE = True
 
 EARLY_GAME_MAX_SHIPS = 4
 EARLY_GAME_MAX_PLANETS = 2
@@ -50,6 +50,3 @@ EARLY_GAME_ALLY_RADIUS = 15
 MID_GAME_ENEMY_RADIUS = DOCK_TURNS * MAX_SPEED + WEAPON_RADIUS
 
 EARLY_GAME_MAX_CORRECTIONS = 160
-
-# early game big and small map differences
-# for travelling to planet: if amount travelling more than docking spots + enemies in radius + X then choose next planet

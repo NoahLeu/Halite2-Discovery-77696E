@@ -8,6 +8,6 @@ build up a list of commands and send them with send_command_queue().
 
 from . import collision, constants, entity, game_map, networking
 
-from . import strats, calculations
+from . import calculations
 
 from .networking import Game

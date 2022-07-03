@@ -1,5 +1,6 @@
 import hltDiscovery as hlt
 import logging
+import random
 
 def get_distance_between_pos_entity(position, entity):
     entityX = entity.x
@@ -93,46 +94,6 @@ def get_initial_planet_scores(game_map):
 
     return planet_scores
 
-def get_initial_planet_scores2(game_map):
-    MAX_RANGE_PLANETS_THRESHOLD = 40
-
-    planet_scores = []
-
-    for planet in game_map.all_planets():
-        dockingSpots = planet.num_docking_spots
-        #enemyShipsByDistance = get_enemy_ships_by_distance(game_map, planet)
-        # distanceToClosetEnemy = planet.calculate_distance_between(enemyShipsByDistance[0])
-        ownAverageDistanceToPlanet = 0
-        ships = game_map.get_me().all_ships()
-        x_sum = 0
-        y_sum = 0
-        for ship in ships:
-            x_sum += ship.x
-            y_sum += ship.y
-        
-        x_sum /= len(ships)
-        y_sum /= len(ships)
-        ownAverageDistanceToPlanet = planet.calculate_distance_between(hlt.entity.Position(x_sum, y_sum))
-        distanceToCenter = planet.calculate_distance_between(hlt.entity.Position(game_map.width / 2, game_map.height / 2))
-        numberOfPlanetsInRadius = len([planetInRadius for planetInRadius in game_map.all_planets() if planet.calculate_distance_between(planetInRadius) < MAX_RANGE_PLANETS_THRESHOLD - planet.radius - planetInRadius.radius])
-        max_map_distance = max(game_map.width, game_map.height)
-
-        # normalize values
-        dockingSpots = (dockingSpots - 2) / (20 - 2)
-        ownAverageDistanceToPlanet = ownAverageDistanceToPlanet / max_map_distance 
-        numberOfPlanetsInRadius = numberOfPlanetsInRadius / len(game_map.all_planets())
-        distanceToCenter = distanceToCenter / max_map_distance
-
-        # score is best if minimal
-        # dockingspots best if high, ownAverageDistanceToPlanet best if low, numberOfPlanetsInRadius best if high, distanceToCenter best if low
-        evaluation_score =  2.8 * (ownAverageDistanceToPlanet/1) + 1.5 * (distanceToCenter/1) - 1 * (numberOfPlanetsInRadius) - 1.8 * (dockingSpots) 
-
-        planet_scores.append([planet, evaluation_score])
-
-    planet_scores.sort(key=lambda x: x[1])
-    planet_scores = [planet[0] for planet in planet_scores]
-
-    return planet_scores
 
 def rush_on_game_start(game_map):
     if len(game_map.all_players()) > 2:
@@ -149,7 +110,25 @@ def rush_on_game_start(game_map):
 
     if closestEnemyShipDistance < hlt.constants.RUSH_MAX_RANGE or \
         game_map.size < hlt.constants.RUSH_MAP_SIZE_MAX:
-        return True
+        if rush_roulette():
+            return True
 
     if game_map.size < hlt.constants.RUSH_MAP_SIZE_MAX:
+        if rush_roulette():
+            return True
+
+    return False
+
+
+def rush_roulette():
+    roulette_spin = random.randint(0, 2)
+    if roulette_spin == 0:
+        logging.info("    ___________,")
+        logging.info(" \-'       _____|=====+--------------+")
+        logging.info("  )   _ __/           | PENG -> RUSH |")
+        logging.info(" / `./_/              |______________|")
+        logging.info("|   |     ")
+        logging.info("|   \         ")
+        logging.info("`---'")
         return True
+    return False
