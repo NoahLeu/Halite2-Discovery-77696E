@@ -43,14 +43,9 @@ while True:
     
     if turn == 0:
         planet_priority_list = hlt.calculations.get_initial_planet_scores(game_map)
-
-        far_dist = 0
-        far_ship_on_start = game_map.get_me().all_ships()[0]
-        for m_ship in game_map.get_me().all_ships():
-            m_ship_dist = m_ship.calculate_distance_between(planet)
-            if m_ship_dist > far_dist:
-                far_dist = m_ship_dist
-                far_ship_on_start = m_ship
+        own_ships_by_distance = game_map.get_me().all_ships()
+        own_ships_by_distance.sort(key=lambda x: x.calculate_distance_between(planet_priority_list[0]))
+        slow_ship_on_start = own_ships_by_distance[-1]
 
     if turn == 0 and hlt.calculations.rush_on_game_start(game_map):
         RUSH_MODE = True
@@ -213,7 +208,7 @@ while True:
                                 break
                             else:
                                 current_x, current_y = ship.x, ship.y
-                                if turn == 0 and ship.id == far_ship_on_start.id:
+                                if turn == 0 and ship.id == slow_ship_on_start.id:
                                     [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(planet), game_map, speed=int(hlt.constants.MAX_SPEED - 2), max_corrections=hlt.constants.EARLY_GAME_MAX_CORRECTIONS, new_ship_positions = new_ship_positions, early=True)
                                 else:
                                     [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(planet), game_map, speed=int(hlt.constants.MAX_SPEED), max_corrections=hlt.constants.EARLY_GAME_MAX_CORRECTIONS, new_ship_positions = new_ship_positions, early=True)
