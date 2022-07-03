@@ -5,8 +5,11 @@ import time
 
 from hltDiscovery.calculations import get_planets_by_distance
 
-game = hlt.Game("Discovery 0.8 EARLY")
+game = hlt.Game("Discovery 0.9")
 logging.info("Starting my Discovery!")
+logging.info("Calculating win % ...")
+logging.info("Finished calculating win %! Starting game!")
+logging.info("Calculating win probability of 99.99999%")
 
 turn = -1
 
@@ -45,7 +48,6 @@ while True:
     if turn == 0 and hlt.calculations.rush_on_game_start(game_map):
         RUSH_MODE = True
         EARLY_GAME = False
-        logging.info("RUSH MODE ACTIVATED TURN 0")
 
     my_free_ships = game_map.get_me().free_ships()
     my_docked_ships = game_map.get_me().docked_ships()
@@ -72,7 +74,6 @@ while True:
         MID_GAME = True
 
     logging.info("Turn: " + str(turn))
-    logging.info("Current mode: EARLY_GAME = {}, RUSH_MODE = {}, MID_GAME = {}".format(EARLY_GAME, RUSH_MODE, MID_GAME))
 
     '''
     player_id = game_map.get_me().id
@@ -109,13 +110,8 @@ while True:
         if len(enemy_ships) > 3:
             ships_in_critical_zone_count = 0
 
-        #if ships_in_critical_zone_count == 0:
-            #logging.info("0 SHIPS IN CRITICAL ZONE -> SAFE TO GO TO PLANETS")
-
         # disable docking for one ship and protect own docking ships
         if ships_in_critical_zone_count == 1:
-            #logging.info("1 SHIP IN CRITICAL ZONE")
-            # find closest ship to enemy that is status undocked
             my_ships_sorted = sorted(my_ships, key=lambda ship: ship.calculate_distance_between(closest_enemy_ship))
 
             found_undocked_ship = False
@@ -129,11 +125,9 @@ while True:
                 allow_docking_for_ship[my_ships_sorted[0].id] = False
 
         if ships_in_critical_zone_count > 1 or (ships_in_critical_zone_count == 1 and len(enemy_ships) == 1):
-            logging.info("emergency -> undock all ships")
 
             # check if all ships are undocked
             if len([ship for ship in my_ships if ship.docking_status == ship.DockingStatus.UNDOCKED]) == len(my_ships): 
-                logging.info("all undocked -> activating rush")
                 EARLY_GAME = False
                 MID_GAME = False
                 RUSH_MODE = True
@@ -153,8 +147,8 @@ while True:
             avg_ship_y = sum([ship.y for ship in my_ships]) / len(my_ships)
             startPos = hlt.entity.Position(avg_ship_x, avg_ship_y)
 
+            logging.info(allow_docking_for_ship)
             for ship in my_ships:
-                i += 1
                 if ship.docking_status != ship.DockingStatus.UNDOCKED:
                     new_ship_positions.append(((ship.x, ship.y), (ship.x, ship.y)))
                     if not allow_docking_for_ship[ship.id]:
@@ -167,15 +161,10 @@ while True:
                         planet_priority_list = get_planets_by_distance(game_map, ship)
 
                     for planet in planet_priority_list:
-                        if i == 1:
+                        if i == 0:
                             planet_first_choice = planet
                         elif planet_first_choice is not None:
                             planet = planet_first_choice
-                        #planet = planet[0]
-
-                        # ? potentially spread out if no enemy ships are nearby
-                        # ? potentially spread out if no enemy ships are nearby
-                        # ? potentially spread out if no enemy ships are nearby
 
                         # navigate to planet
                         # planet has owner
@@ -213,9 +202,6 @@ while True:
                                         break
                                     break
 
-                                # ? potentially spread out if no enemy ships are nearby
-                                # ? potentially spread out if no enemy ships are nearby
-                                # ? potentially spread out if no enemy ships are nearby
                             # planet belongs to enemy -> take next best planet
                             elif planet.all_docked_ships()[0].owner != game_map.get_me():
                                 continue
@@ -242,8 +228,10 @@ while True:
                 
                 # this ship is the only one to protect own ships
                 else:
-                    # stay near own docking ships and attack enemy if in radius of 40?
+                    logging.info("protecting own ships")
+                    # stay near own docking ships and attack enemy if in radius
                     if closest_enemy_dist < hlt.constants.EARLY_GAME_PROTECTION_RADIUS:
+                        # currently: kamikaze into enemy ship
                         # ! COPY FIGHTING BEHAVIOR FROM RUSH MODE FOR THIS SHIP
                         current_x, current_y = ship.x, ship.y
                         [navigate_command, (x, y)] = ship.navigate(ship.closest_point_to(closest_enemy_ship), game_map, speed=int(hlt.constants.MAX_SPEED), max_corrections=hlt.constants.EARLY_GAME_MAX_CORRECTIONS, new_ship_positions = new_ship_positions, early=True)
@@ -251,7 +239,7 @@ while True:
                         if navigate_command:
                             command_queue.append(navigate_command)
                             break
-                    # if no enemy ships are in radius of 40, move to closest ally ship with safety distance of 15
+                    # if no enemy ships are in radius, move to closest ally ship with safety distance
                     else:
                         my_ships_sorted = sorted(my_ships, key=lambda ally: ally.calculate_distance_between(ship))
 
@@ -280,6 +268,8 @@ while True:
                                 command_queue.append(navigate_command)
                                 break
                             break
+
+                i += 1
 
     if RUSH_MODE:
         logging.info("RUSH MODE")
