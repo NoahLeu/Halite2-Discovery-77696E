@@ -276,24 +276,6 @@ class Ship(Entity):
     def navigate(self, target, game_map, speed, avoid_obstacles=True, max_corrections=90, angular_step=1,
                  ignore_ships=False, ignore_planets=False, new_ship_positions=[], early=False):
         if max_corrections <= 0:
-            '''
-            if speed > 0:
-                speed -= 1
-                angle = self.calculate_angle_between(target)
-                new_target_dx = math.cos(math.radians(angle + angular_step)) * speed
-                new_target_dy = math.sin(math.radians(angle + angular_step)) * speed
-                new_target = Position(self.x + new_target_dx, self.y + new_target_dy)
-
-                return self.navigate(new_target, game_map, speed, True, max_corrections + 3, angular_step, new_ship_positions = new_ship_positions)
-
-            else: 
-                speed = 1
-                angle = (self.calculate_angle_between(target) + 180) % 360
-                current_target_dx = math.cos(math.radians(angle)) * speed
-                current_target_dy = math.sin(math.radians(angle)) * speed
-                return [self.thrust(speed, angle), (self.x + current_target_dx, self.y + current_target_dy)]
-            '''
-            
             return [None, (self.x, self.y)]
 
         distance = self.calculate_distance_between(target)
@@ -318,27 +300,25 @@ class Ship(Entity):
                         closest_obstacle_to_target = obstacle
                         closest_dist = self.calculate_distance_between(obstacle)
 
-                logging.info("own pos: {}".format((self.x, self.y)))
-                logging.info("obstacle pos: {}".format((closest_obstacle_to_target.x, closest_obstacle_to_target.y)))
-                
                 speed = speed if (distance >= speed) else distance
-                if isinstance(closest_obstacle_to_target, Ship) and len(new_positions) > 0:
-                    logging.info("dodging own ship")
+                if (isinstance(closest_obstacle_to_target, Ship) or isinstance(closest_obstacle_to_target, Position)) and len(new_positions) > 0:
                     closest_obstacle_index = 0
-                    logging.info(new_ship_positions)
                     for i in range(len(new_positions)):
                         if new_positions[i][0] == closest_obstacle_to_target.x and new_positions[i][1] == closest_obstacle_to_target.y:
                             closest_obstacle_index = i
                             break
-                    logging.info(new_ship_positions[closest_obstacle_index])
                     obstacle_old_pos = Position(new_ship_positions[closest_obstacle_index][0][0], new_ship_positions[closest_obstacle_index][0][1])
                     current_dist_to_obstacle = self.calculate_distance_between(obstacle_old_pos)
                     obstacle_new_pos = Position(new_ship_positions[closest_obstacle_index][1][0], new_ship_positions[closest_obstacle_index][1][1])
-                    new_dist_to_obstacle = self.calculate_distance_between(obstacle_new_pos)
+                    
+                    obst_angle = self.calculate_angle_between(obstacle_new_pos)
 
-                    logging.info("current dist: {}".format(current_dist_to_obstacle))
-                    if current_dist_to_obstacle <= constants.SHIP_RADIUS * 2 + 0.1 or new_dist_to_obstacle <= constants.SHIP_RADIUS * 2 + 0.1:
-                        logging.info("Obstacle DANGER")
+                    new_self_x = self.x + math.cos(math.radians(obst_angle)) * speed
+                    new_self_y = self.y + math.sin(math.radians(obst_angle)) * speed
+                    my_new_pos = Position(new_self_x, new_self_y)
+
+                    dist_new_to_obst = ((my_new_pos.x - obstacle_new_pos.x)**2 + (my_new_pos.y - obstacle_new_pos.y)**2)**0.5
+                    if current_dist_to_obstacle <= constants.SHIP_RADIUS * 2 + 0.1 or dist_new_to_obst <= constants.SHIP_RADIUS * 2 + 0.1:
                         speed -= constants.SHIP_RADIUS * 2
                     
                     if speed < 0:
@@ -353,7 +333,7 @@ class Ship(Entity):
 
                 current_distance = self.calculate_distance_between(target)
 
-                new_distance = (new_x - target.x) ** 2 + (new_y - target.y) ** 2
+                new_distance = ((new_x - target.x) ** 2 + (new_y - target.y) ** 2) ** 0.5
                 
                 if new_distance <= current_distance:
                     current_correction = 1
@@ -367,7 +347,6 @@ class Ship(Entity):
                 
                 return self.navigate(new_target, game_map, speed, True, max_corrections - 1, angular_step, new_ship_positions = new_ship_positions)
 
-        # dont crash into target
         speed = speed if (distance >= speed) else distance
 
         current_target_dx = math.cos(math.radians(angle)) * speed

@@ -186,11 +186,13 @@ class Map:
         obstacles = []
 
         ship_pos = [entity.Position(ship_position[0], ship_position[1]) for ship_position in ship_positions]
+        for pos_entity in ship_pos:
+            pos_entity.radius = ship.radius
 
         for own_ship in ship_pos:
             if own_ship.x == ship.x and own_ship.y == ship.y:
                 continue
-            if collision.intersect_segment_circle(ship, target, own_ship, fudge=ship.radius * 2):
+            if collision.intersect_segment_circle(ship, target, own_ship, fudge=ship.radius + 0.1):
                 obstacles.append(own_ship)
 
         entities = ([] if issubclass(entity.Planet, ignore) else self.all_planets()) \
